@@ -36,21 +36,12 @@ requiredEnvVars.forEach(v => {
 ======================= */
 app.use(cors({
   origin: [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-    "http://localhost:3000",
-    "http://localhost:5001",
-    "http://localhost:5000"
+    "https://hygo-59a87.web.app",
+    "https://hygo-59a87.firebaseapp.com"
   ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
-
-app.use(express.json());
-
-app.use((req, res, next) => {
-  console.log(`📨 ${req.method} ${req.url}`);
-  next();
-});
 
 /* =======================
    DATABASE
