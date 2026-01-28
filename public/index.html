@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motbung Chow</title>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyBw9FCzFqSfuUNQ5VBTxmxZj5ieaniGWzI",
+      authDomain: "hygo-59a87.firebaseapp.com",
+      projectId: "hygo-59a87",
+      appId: "1:740924441037:web:d80fd604f222fc06c38484",
+    });
+  </script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="recaptcha-container" style="display:none;"></div>
+
+<div id="loginPage" class="login-screen">
+  <button class="login-btn" onclick="showLoginForm()">Login / Signup</button>
+
+  <div id="phoneForm" style="display:none;">
+    <div class="phone-wrapper">
+      <span class="country-code">+91</span>
+      <input type="tel" id="phoneInput" maxlength="10" placeholder="Enter phone number" />
+    </div>
+
+    <div id="otpSection" style="display:none;">
+      <input type="text" id="otpInput" maxlength="6" placeholder="Enter OTP" />
+    </div>
+
+    <button class="verify-btn" id="authBtn" onclick="handleAuth()">
+      Send OTP
+    </button>
+  </div>
+</div>
+
+<!-- ================= MAIN APP ================= -->
+<div id="mainApp" style="display:none;">
+
+  <!-- HEADER -->
+  <div id="homeHeader">
+    <div class="top-bar">
+      <div class="brand-title">
+        <img src="images/logo.png" class="brand-logo" alt="Logo">
+      </div>
+
+      <div class="top-search">
+        <input type="text" id="searchInput" placeholder="Search food...">
+      </div>
+    </div>
+
+    <div class="menu-categories">
+      <button class="active" onclick="filterCategory('all',this)">All</button>
+      <button onclick="filterCategory('fried',this)">Fried Rice</button>
+      <button onclick="filterCategory('noodles',this)">Noodles</button>
+      <button onclick="filterCategory('curry',this)">Curry</button>
+      <button onclick="filterCategory('beverages',this)">Beverages</button>
+    </div>
+  </div>
+
+  <!-- Floating Checkout -->
+  <button id="floatingCheckout" class="floating-checkout" onclick="checkout()">
+    Checkout • ₹<span id="floating-total">0</span>
+  </button>
+
+  <!-- HOME PAGE -->
+  <div id="homePage" class="page active">
+    <div id="menuContainer"></div>
+  </div>
+
+  <!-- ORDERS PAGE -->
+  <div id="ordersPage" class="page">
+    <h3>My Orders</h3>
+    <div id="ordersList"></div>
+  </div>
+
+  <!-- HELP PAGE -->
+  <div id="helpPage" class="page">
+    <div class="help-content">
+      <h3>Call Us</h3>
+      <p>+91 98765 43210</p>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button id="homeBtn" onclick="showPage('home')">Home</button>
+    <button id="ordersBtn" onclick="showPage('orders')">My Orders</button>
+    <button id="helpBtn" onclick="showPage('help')">Help</button>
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="js/app.js" defer></script>
+<script src="js/menu.js" defer></script> <!-- ⭐ THIS WAS MISSING -->
+
+</body>
+</html>
+
