@@ -11,7 +11,7 @@
     {
       "source": "functions",
       "codebase": "default",
-      "disallowLegacyRuntimeConfig": true,
+      "disableLegacyRuntimeConfig": true,
       "ignore": [
         "node_modules",
         ".git",
