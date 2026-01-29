@@ -72,3 +72,9 @@ firebase-service-account.json
 node_modules/
 backend.zip
 
+# functions/
+.firebase/
+node_modules/
+.env
+
+

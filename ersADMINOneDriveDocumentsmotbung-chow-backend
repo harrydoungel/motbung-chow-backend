@@ -1,0 +1,36 @@
+[33mcommit 39e5064d6231883259e022494899005414d9246b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: harrydoungel <harrydoungel@gmail.com>
+Date:   Thu Jan 29 03:08:56 2026 +0530
+
+    Fix CORS for Firebase Hosting
+
+[1mdiff --git a/index.js b/index.js[m
+[1mindex d7b881d..b9cb9fc 100644[m
+[1m--- a/index.js[m
+[1m+++ b/index.js[m
+[36m@@ -36,22 +36,13 @@[m [mrequiredEnvVars.forEach(v => {[m
+ ======================= */[m
+ app.use(cors({[m
+   origin: [[m
+[31m-    "http://127.0.0.1:5500",[m
+[31m-    "http://localhost:5500",[m
+[31m-    "http://localhost:3000",[m
+[31m-    "http://localhost:5001",[m
+[31m-    "http://localhost:5000"[m
+[32m+[m[32m    "https://hygo-59a87.web.app",[m
+[32m+[m[32m    "https://hygo-59a87.firebaseapp.com"[m
+   ],[m
+[32m+[m[32m  methods: ["GET", "POST", "PUT", "DELETE"],[m
+   credentials: true[m
+ }));[m
+ [m
+[31m-app.use(express.json());[m
+[31m-[m
+[31m-app.use((req, res, next) => {[m
+[31m-  console.log(`📨 ${req.method} ${req.url}`);[m
+[31m-  next();[m
+[31m-});[m
+[31m-[m
+ /* =======================[m
+    DATABASE[m
+ ======================= */[m
