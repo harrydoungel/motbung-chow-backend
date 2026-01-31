@@ -12,6 +12,11 @@ const orderRoutes = require("./routes/orderRoutes");
 console.log("🔥 MOTBUNG CHOW BACKEND STARTED 🔥");
 
 const app = express();
+
+// ✅ BODY PARSING (FIX)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const PORT = process.env.PORT || 5001;
 
 /* =======================
@@ -39,9 +44,11 @@ app.use(cors({
     "https://hygo-59a87.web.app",
     "https://hygo-59a87.firebaseapp.com"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET","POST","PUT","DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
 
 /* =======================
    DATABASE
