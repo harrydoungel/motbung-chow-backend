@@ -1,250 +1,158 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-const admin = require("firebase-admin");
 
-/* =======================
-   FIREBASE ADMIN INITIALIZATION
-======================= */
+const admin = require("firebase-admin");
+const fs = require("fs");
+
+/* ============================================
+   ✅ FIREBASE ADMIN INITIALIZATION (ONCE)
+============================================ */
 try {
-  // Check if Firebase Admin is already initialized
   if (!admin.apps.length) {
-    // Try to get service account from environment variable
+    // ✅ Option 1: Render ENV Variable
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      console.log("🔧 Initializing Firebase Admin from env variable...");
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      console.log("🔧 Firebase Admin Init from ENV...");
+
+      const serviceAccount = JSON.parse(
+        process.env.FIREBASE_SERVICE_ACCOUNT
+      );
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: serviceAccount.project_id
       });
-    } 
-    // Try to load from service account file
-    else if (require("fs").existsSync("./firebase-service-account.json")) {
-      console.log("🔧 Initializing Firebase Admin from service account file...");
+    }
+
+    // ✅ Option 2: Local JSON File (Dev Only)
+    else if (fs.existsSync("./firebase-service-account.json")) {
+      console.log("🔧 Firebase Admin Init from JSON file...");
+
       const serviceAccount = require("../firebase-service-account.json");
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: serviceAccount.project_id
       });
     }
-    // For development/testing without Firebase
+
+    // ✅ Option 3: Mock Mode (No Firebase)
     else {
-      console.log("⚠️  Firebase service account not found. Running in MOCK mode.");
-      console.log("ℹ️  To enable real OTP verification:");
-      console.log("1. Download service account from Firebase Console");
-      console.log("2. Save as firebase-service-account.json in backend folder");
-      console.log("3. Or set FIREBASE_SERVICE_ACCOUNT env variable");
+      console.log("⚠️ Firebase Admin NOT initialized → MOCK MODE");
     }
   }
-  
+
   if (admin.apps.length > 0) {
-    console.log("✅ Firebase Admin SDK initialized");
-    console.log("📊 Project ID:", admin.app().options.projectId);
+    console.log("✅ Firebase Admin SDK Ready");
   }
-} catch (error) {
-  console.error("❌ Firebase Admin initialization failed:", error.message);
+} catch (err) {
+  console.error("❌ Firebase Admin Init Failed:", err.message);
 }
 
-/* =======================
-   REAL FIREBASE OTP VERIFICATION
-======================= */
-router.post("/login", async (req, res) => {
-  console.log("📞 /api/auth/login called - REAL VERIFICATION");
-  
-  try {
-    const { idToken } = req.body;
-    console.log("Request received with idToken:", idToken ? "Yes (length: " + idToken.length + ")" : "No");
+/* ============================================
+   ✅ OTP LOGIN ROUTE (ONLY ONE)
+   POST /api/auth/phone-login
+============================================ */
+router.post("/phone-login", async (req, res) => {
+  console.log("📞 POST /api/auth/phone-login called");
 
-    if (!idToken) {
-      console.log("❌ No idToken provided");
+  try {
+    // ✅ Validate Body
+    if (!req.body || !req.body.idToken) {
       return res.status(400).json({
         success: false,
-        message: "Firebase ID token is required"
+        message: "idToken is required",
       });
     }
 
-    // If Firebase Admin is not initialized, fall back to mock mode
+    const { idToken } = req.body;
+
+    /* ============================================
+       ✅ MOCK MODE (Firebase Missing)
+    ============================================ */
     if (!admin.apps.length) {
-      console.log("⚠️  Firebase Admin not available. Using MOCK mode.");
-      console.log("⚠️  Set up Firebase Admin for real OTP verification.");
-      
-      // Mock verification for development
-      const mockPhone = "9876543210";
-      const token = jwt.sign(
-        { 
-          id: "mock-user-" + Date.now(), 
-          phone: mockPhone,
-          isMock: true 
+      console.log("⚠️ MOCK LOGIN USED");
+
+      const mockToken = jwt.sign(
+        {
+          id: "mock-user-" + Date.now(),
+          phone: "9999999999",
+          isMock: true,
         },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
 
-      console.log("✅ Mock login successful");
-      
       return res.json({
         success: true,
-        message: "Login successful (MOCK MODE - Set up Firebase for real verification)",
-        token,
+        message: "Mock login success ✅",
+        token: mockToken,
         user: {
-          id: "mock-user-id",
-          phone: mockPhone,
-          isMock: true
+          phone: "9999999999",
+          isMock: true,
         },
-        warning: "Running in mock mode. Set up Firebase Admin for real OTP verification."
       });
     }
 
-    // REAL Firebase token verification
-    console.log("🔄 Verifying Firebase ID token with Admin SDK...");
-    
+    /* ============================================
+       ✅ VERIFY FIREBASE ID TOKEN
+    ============================================ */
+    console.log("🔄 Verifying Firebase ID Token...");
+
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    
-    console.log("✅ Firebase token verified successfully!");
-    console.log("👤 User ID:", decodedToken.uid);
-    console.log("📱 Phone:", decodedToken.phone_number || "No phone");
-    console.log("📧 Email:", decodedToken.email || "No email");
-    console.log("🔧 Issuer:", decodedToken.iss);
-    console.log("🕒 Expires:", new Date(decodedToken.exp * 1000).toLocaleString());
 
-    // Get additional user info
-    let userRecord;
-    try {
-      userRecord = await admin.auth().getUser(decodedToken.uid);
-      console.log("📋 User metadata fetched");
-    } catch (err) {
-      console.log("ℹ️ Could not fetch user details:", err.message);
-    }
+    console.log("✅ Firebase Verified UID:", decodedToken.uid);
 
-    const phoneNumber = decodedToken.phone_number || userRecord?.phoneNumber;
-    
+    const phoneNumber = decodedToken.phone_number;
+
     if (!phoneNumber) {
-      console.log("⚠️  No phone number found in token");
       return res.status(400).json({
         success: false,
-        message: "Phone number not found in user profile"
+        message: "Phone number missing in Firebase token",
       });
     }
 
-    // Create your custom JWT
-    const token = jwt.sign(
+    /* ============================================
+       ✅ CREATE SESSION JWT
+    ============================================ */
+    const sessionToken = jwt.sign(
       {
         id: decodedToken.uid,
         phone: phoneNumber,
-        firebaseUid: decodedToken.uid,
-        email: decodedToken.email,
-        isVerified: true,
-        authTime: decodedToken.auth_time
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    console.log("🎫 Custom JWT created for:", phoneNumber);
+    console.log("🎫 Session JWT Created Successfully");
 
-    // Prepare user data
-    const userData = {
-      id: decodedToken.uid,
-      phone: phoneNumber,
-      email: decodedToken.email || null,
-      displayName: userRecord?.displayName || null,
-      photoURL: userRecord?.photoURL || null,
-      isNewUser: userRecord?.metadata?.creationTime === userRecord?.metadata?.lastSignInTime,
-      createdAt: userRecord?.metadata?.creationTime || new Date().toISOString(),
-      lastLoginAt: userRecord?.metadata?.lastSignInTime || new Date().toISOString()
-    };
-
-    console.log("🚀 REAL login successful for:", phoneNumber);
-    
-    res.json({
+    return res.json({
       success: true,
-      message: "Login successful with Firebase OTP",
-      token,
-      user: userData,
-      isNewUser: userData.isNewUser
+      message: "Login successful ✅",
+      token: sessionToken,
+      user: {
+        uid: decodedToken.uid,
+        phone: phoneNumber,
+      },
     });
-
   } catch (error) {
-    console.error("❌ Firebase token verification failed:", error.message);
-    
-    // Handle Firebase specific errors
-    let statusCode = 401;
-    let errorMessage = "Authentication failed";
-    let errorCode = error.code || "unknown_error";
+    console.error("❌ LOGIN FAILED:", error.message);
 
-    switch (error.code) {
-      case "auth/id-token-expired":
-        errorMessage = "Firebase token has expired. Please login again.";
-        break;
-      case "auth/id-token-revoked":
-        errorMessage = "Firebase token has been revoked. Please login again.";
-        break;
-      case "auth/invalid-id-token":
-        errorMessage = "Invalid Firebase token.";
-        break;
-      case "auth/argument-error":
-        errorMessage = "Invalid token format.";
-        statusCode = 400;
-        break;
-      default:
-        errorMessage = `Authentication error: ${error.message}`;
-    }
-
-    res.status(statusCode).json({
+    return res.status(401).json({
       success: false,
-      message: errorMessage,
-      error: errorCode,
-      debug: process.env.NODE_ENV === "development" ? error.message : undefined
+      message: "Authentication failed",
+      error: error.message,
     });
   }
 });
 
-/* =======================
-   DEBUG ENDPOINTS
-======================= */
-router.get("/test-firebase", async (req, res) => {
-  try {
-    if (!admin.apps.length) {
-      return res.json({
-        success: false,
-        message: "Firebase Admin not initialized",
-        instructions: "Set up firebase-service-account.json or FIREBASE_SERVICE_ACCOUNT env variable"
-      });
-    }
-
-    // Test Firebase connection
-    const listResult = await admin.auth().listUsers(5);
-    
-    res.json({
-      success: true,
-      message: "Firebase Admin is working",
-      projectId: admin.app().options.projectId,
-      totalUsers: listResult.users.length,
-      sampleUsers: listResult.users.map(u => ({
-        uid: u.uid,
-        phone: u.phoneNumber,
-        email: u.email,
-        created: u.metadata.creationTime
-      }))
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Firebase test failed",
-      error: error.message
-    });
-  }
-});
-
+/* ============================================
+   ✅ HEALTH CHECK
+============================================ */
 router.get("/health", (req, res) => {
   res.json({
     success: true,
-    message: "Auth service is running",
     firebaseInitialized: admin.apps.length > 0,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
-
-console.log("✅ Routes registered in auth.js");
 
 module.exports = router;
