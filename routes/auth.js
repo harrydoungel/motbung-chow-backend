@@ -54,6 +54,8 @@ try {
 router.post("/phone-login", async (req, res) => {
   console.log("📞 POST /api/auth/phone-login called");
 
+  console.log("✅ BODY RECEIVED:", req.body);
+
   try {
     // ✅ Validate Body
     if (!req.body || !req.body.idToken) {
