@@ -15,7 +15,7 @@ const razorpay = new Razorpay({
 });
 
 /* =======================
-   ADMIN: GET ALL ORDERS
+   ADMIN: GET ALL ORDERS (SUPER ADMIN ONLY – protect later)
 ======================= */
 router.get("/", async (req, res) => {
   try {
@@ -28,125 +28,111 @@ router.get("/", async (req, res) => {
 });
 
 /* =======================
-   CREATE ORDER (COD + ONLINE)
+   CREATE ORDER (SINGLE RESTAURANT ONLY)
 ======================= */
 router.post("/create-order", auth, async (req, res) => {
   try {
-    // ✅ Firebase UID from JWT
     const userId = req.user.id;
 
-    console.log("✅ Creating order for Firebase UID:", userId);
+    const {
+      location,
+      mapLink,
+      paymentMethod,
+      items,
+      customerName,
+      restaurantId,
+    } = req.body;
 
-    // ✅ Get ALL fields including customer name
-    const { amount, location, mapLink, paymentMethod, items, customerName } = req.body;
-
-    console.log("📦 Customer name received:", customerName);
-    console.log("📦 Items received:", items);
-    console.log("📦 Items length:", items?.length || 0);
-
-    // ✅ Validate ALL required fields including customer name
-    if (!amount || !location || !paymentMethod || !customerName) {
+    /* ========= BASIC VALIDATION ========= */
+    if (!location || !paymentMethod || !customerName || !restaurantId) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: amount, location, paymentMethod, or customer name",
+        message: "Missing required fields",
       });
     }
 
-    /* =======================
-       CASH ON DELIVERY
-    ======================= */
-    if (paymentMethod === "cod") {
-      const order = new Order({
-        user: userId,
-        orderId: "COD_" + Date.now(),
-        customerName: customerName, // ✅ CRITICAL: Save customer name
-        items: items || [],
-        amount,
-        location,
-        mapLink: mapLink || "",
-        paymentMethod: "COD",
-        status: "COD_PENDING",
-      });
-
-      await order.save();
-
-      console.log("✅ COD Order saved:", order.orderId);
-      console.log("👤 Customer:", customerName);
-
-      return res.json({
-        success: true,
-        message: "Order placed successfully (COD)",
-        order,
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cart is empty",
       });
     }
 
-    /* =======================
-       ONLINE PAYMENT
-    ======================= */
+    /* ========= ENSURE ALL ITEMS BELONG TO SAME RESTAURANT ========= */
+    const invalidItem = items.find(
+      (item) => String(item.restaurantId) !== String(restaurantId)
+    );
+
+    if (invalidItem) {
+      return res.status(400).json({
+        success: false,
+        message: "All items must belong to the same restaurant",
+      });
+    }
+
+    /* ========= CALCULATE TOTAL ========= */
+    const amount = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+    /* ========= CREATE RAZORPAY ORDER (ONLINE ONLY) ========= */
+    let razorpayOrderId = null;
+
     if (paymentMethod === "online") {
-      // ✅ Create Razorpay Order
       const razorpayOrder = await razorpay.orders.create({
-        amount: amount * 100, // convert ₹ → paise
+        amount: amount * 100, // paise
         currency: "INR",
         receipt: "rcpt_" + Date.now(),
       });
 
-      // ✅ Save in DB
-      const order = new Order({
-        user: userId,
-        orderId: razorpayOrder.id,
-        customerName: customerName, // ✅ CRITICAL: Save customer name
-        items: items || [],
-        amount,
-        location,
-        mapLink: mapLink || "",
-        paymentMethod: "ONLINE",
-        status: "PENDING",
-      });
-
-      await order.save();
-
-      console.log("✅ Online Order saved:", order.orderId);
-      console.log("👤 Customer:", customerName);
-
-      return res.json({
-        success: true,
-        message: "Order created. Complete payment.",
-        razorpayOrderId: razorpayOrder.id,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        order,
-      });
+      razorpayOrderId = razorpayOrder.id;
     }
 
-    return res.status(400).json({
-      success: false,
-      message: "Invalid payment method",
+    /* ========= CREATE ORDER DOCUMENT ========= */
+    const order = new Order({
+      user: userId,
+      orderId:
+        paymentMethod === "cod"
+          ? "COD_" + Date.now()
+          : razorpayOrderId,
+
+      customerName,
+      items,
+      amount,
+
+      location,
+      mapLink: mapLink || "",
+
+      paymentMethod: paymentMethod === "cod" ? "COD" : "ONLINE",
+      status: paymentMethod === "cod" ? "COD_PENDING" : "PENDING",
+
+      restaurantId,
+    });
+
+    await order.save();
+
+    return res.json({
+      success: true,
+      message: "Order created successfully",
+      order,
     });
   } catch (err) {
     console.error("❌ Create order error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
-      error: err.message,
     });
   }
 });
 
 /* =======================
-   MY ORDERS (LOGGED IN USER)
+   MY ORDERS (CUSTOMER)
 ======================= */
 router.get("/my-orders", auth, async (req, res) => {
   try {
-    const userId = req.user.id; // ✅ Firebase UID
-
-    console.log("✅ Fetching orders for user:", userId);
+    const userId = req.user.id;
 
     const orders = await Order.find({ user: userId }).sort({
       createdAt: -1,
     });
-
-    console.log(`✅ Found ${orders.length} orders`);
 
     res.json({
       success: true,
@@ -154,6 +140,37 @@ router.get("/my-orders", auth, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Fetch my orders error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+/* =======================
+   RESTAURANT: GET OWN ORDERS
+======================= */
+router.get("/restaurant", auth, async (req, res) => {
+  try {
+    const restaurantId = req.user.restaurantId;
+
+    if (!restaurantId) {
+      return res.status(403).json({
+        success: false,
+        message: "Restaurant access only",
+      });
+    }
+
+    const orders = await Order.find({ restaurantId }).sort({
+      createdAt: -1,
+    });
+
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (err) {
+    console.error("❌ Fetch restaurant orders error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
