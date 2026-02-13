@@ -64,13 +64,16 @@ router.post("/phone-login", async (req, res) => {
     let restaurant = await Restaurant.findOne({ phone: phoneNumber });
 
     if (!restaurant) {
+      const count = await Restaurant.countDocuments();
+
       restaurant = await Restaurant.create({
         name: "New Restaurant",
         phone: phoneNumber,
         location: "",
+        restaurantCode: "MC" + (count + 1), // MC1, MC2...
       });
 
-      console.log("🏪 Restaurant auto-created:", restaurant._id);
+      console.log("🏪 Restaurant auto-created:", restaurant.restaurantCode);
     }
 
     /* CREATE SESSION JWT */
@@ -88,6 +91,7 @@ router.post("/phone-login", async (req, res) => {
       success: true,
       token: sessionToken,
       restaurantId: restaurant._id,
+      restaurantCode: restaurant.restaurantCode,
     });
   } catch (err) {
     console.error("❌ LOGIN FAILED:", err);
