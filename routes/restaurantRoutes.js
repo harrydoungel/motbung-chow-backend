@@ -6,12 +6,35 @@ const Restaurant = require("../models/Restaurant");
 const auth = require("../middleware/authMiddleware");
 
 /*
+GET /api/restaurants
+Returns list of all restaurants (for customers)
+*/
+router.get("/", async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find().select(
+      "_id name restaurantCode location"
+    );
+
+    res.json({
+      success: true,
+      restaurants,
+    });
+  } catch (err) {
+    console.error("❌ Fetch restaurants error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+/*
 POST /api/restaurants/signup
 Creates a new restaurant for logged-in Firebase user
 */
 router.post("/signup", auth, async (req, res) => {
   try {
-    const ownerUserId = req.user.id; // Firebase UID from token
+    const ownerUserId = req.user.id;
     const { name, phone, address } = req.body;
 
     if (!name || !phone || !address) {
@@ -21,7 +44,6 @@ router.post("/signup", auth, async (req, res) => {
       });
     }
 
-    // Check if restaurant already exists for this owner
     const existing = await Restaurant.findOne({ ownerUserId });
     if (existing) {
       return res.status(400).json({
@@ -30,7 +52,6 @@ router.post("/signup", auth, async (req, res) => {
       });
     }
 
-    // Create restaurant
     const restaurant = new Restaurant({
       name,
       phone,
@@ -40,7 +61,6 @@ router.post("/signup", auth, async (req, res) => {
 
     await restaurant.save();
 
-    // Create JWT containing restaurantId
     const token = jwt.sign(
       {
         id: ownerUserId,
@@ -67,8 +87,6 @@ router.post("/signup", auth, async (req, res) => {
   }
 });
 
-module.exports = router;
-
 /*
 POST /api/restaurants/login
 Returns restaurant info for logged-in Firebase user
@@ -77,7 +95,6 @@ router.post("/login", auth, async (req, res) => {
   try {
     const ownerUserId = req.user.id;
 
-    // Find restaurant owned by this Firebase user
     const restaurant = await Restaurant.findOne({ ownerUserId });
 
     if (!restaurant) {
@@ -87,7 +104,6 @@ router.post("/login", auth, async (req, res) => {
       });
     }
 
-    // Create JWT with restaurantId
     const token = jwt.sign(
       {
         id: ownerUserId,
@@ -113,3 +129,5 @@ router.post("/login", auth, async (req, res) => {
     });
   }
 });
+
+module.exports = router;
