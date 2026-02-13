@@ -169,6 +169,18 @@ try {
 }
 
 /* =======================
+   RESTAURANT ROUTES
+======================= */
+try {
+  console.log("🔄 Loading restaurant routes...");
+  const restaurantRoutes = require("./routes/restaurantRoutes");
+  app.use("/api/restaurants", restaurantRoutes);
+  console.log("✅ Restaurant routes loaded successfully");
+} catch (error) {
+  console.error("❌ FAILED to load restaurant routes:", error.message);
+}
+
+/* =======================
    DEBUG ENDPOINTS
 ======================= */
 app.get("/api/debug/orders", async (req, res) => {
