@@ -17,6 +17,12 @@ const restaurantSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    // ⭐ SHORT PUBLIC CODE (MC1, MC2…)
+    restaurantCode: {
+      type: String,
+      unique: true,
+    },
   },
   { timestamps: true }
 );
