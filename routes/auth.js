@@ -27,7 +27,7 @@ try {
 }
 
 /* ============================================
-   PHONE LOGIN → CREATE RESTAURANT → ISSUE JWT
+   PHONE LOGIN → CREATE / FIX RESTAURANT → JWT
 ============================================ */
 router.post("/phone-login", async (req, res) => {
   try {
@@ -47,7 +47,7 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
-    /* VERIFY FIREBASE TOKEN */
+    /* ========= VERIFY FIREBASE TOKEN ========= */
     const decoded = await admin.auth().verifyIdToken(idToken);
 
     const uid = decoded.uid;
@@ -60,9 +60,10 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
-    /* FIND OR CREATE RESTAURANT */
+    /* ========= FIND EXISTING RESTAURANT ========= */
     let restaurant = await Restaurant.findOne({ phone: phoneNumber });
 
+    /* ========= CREATE NEW RESTAURANT ========= */
     if (!restaurant) {
       const count = await Restaurant.countDocuments();
 
@@ -76,7 +77,17 @@ router.post("/phone-login", async (req, res) => {
       console.log("🏪 Restaurant auto-created:", restaurant.restaurantCode);
     }
 
-    /* CREATE SESSION JWT */
+    /* ========= FIX OLD RESTAURANTS WITHOUT CODE ========= */
+    if (!restaurant.restaurantCode) {
+      const count = await Restaurant.countDocuments();
+
+      restaurant.restaurantCode = "MC" + count;
+      await restaurant.save();
+
+      console.log("🔧 Added missing restaurantCode:", restaurant.restaurantCode);
+    }
+
+    /* ========= CREATE SESSION JWT ========= */
     const sessionToken = jwt.sign(
       {
         id: uid,
@@ -103,7 +114,9 @@ router.post("/phone-login", async (req, res) => {
   }
 });
 
-/* HEALTH */
+/* ============================================
+   HEALTH CHECK
+============================================ */
 router.get("/health", (req, res) => {
   res.json({ success: true });
 });
