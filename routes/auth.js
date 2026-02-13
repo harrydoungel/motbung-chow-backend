@@ -6,21 +6,28 @@ const admin = require("firebase-admin");
 const Restaurant = require("../models/Restaurant");
 
 /* ============================================
-   FIREBASE ADMIN INIT
+   SAFE FIREBASE ADMIN INIT
 ============================================ */
-if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+try {
+  if (!admin.apps.length) {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT env missing");
+    }
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-  console.log("✅ Firebase Admin Initialized");
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+
+    console.log("✅ Firebase Admin Initialized");
+  }
+} catch (err) {
+  console.error("❌ Firebase Admin init failed:", err.message);
 }
 
 /* ============================================
    PHONE LOGIN → CREATE RESTAURANT → ISSUE JWT
-   POST /api/auth/phone-login
 ============================================ */
 router.post("/phone-login", async (req, res) => {
   try {
@@ -33,7 +40,14 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
-    /* ========= VERIFY FIREBASE TOKEN ========= */
+    if (!admin.apps.length) {
+      return res.status(500).json({
+        success: false,
+        message: "Firebase not initialized on server",
+      });
+    }
+
+    /* VERIFY FIREBASE TOKEN */
     const decoded = await admin.auth().verifyIdToken(idToken);
 
     const uid = decoded.uid;
@@ -46,7 +60,7 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
-    /* ========= FIND OR CREATE RESTAURANT ========= */
+    /* FIND OR CREATE RESTAURANT */
     let restaurant = await Restaurant.findOne({ phone: phoneNumber });
 
     if (!restaurant) {
@@ -59,12 +73,12 @@ router.post("/phone-login", async (req, res) => {
       console.log("🏪 Restaurant auto-created:", restaurant._id);
     }
 
-    /* ========= CREATE SESSION JWT ========= */
+    /* CREATE SESSION JWT */
     const sessionToken = jwt.sign(
       {
         id: uid,
         phone: phoneNumber,
-        restaurantId: restaurant._id, // ⭐ CRITICAL
+        restaurantId: restaurant._id,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -76,7 +90,7 @@ router.post("/phone-login", async (req, res) => {
       restaurantId: restaurant._id,
     });
   } catch (err) {
-    console.error("❌ LOGIN FAILED:", err.message);
+    console.error("❌ LOGIN FAILED:", err);
 
     return res.status(401).json({
       success: false,
@@ -85,9 +99,7 @@ router.post("/phone-login", async (req, res) => {
   }
 });
 
-/* ============================================
-   HEALTH CHECK
-============================================ */
+/* HEALTH */
 router.get("/health", (req, res) => {
   res.json({ success: true });
 });
