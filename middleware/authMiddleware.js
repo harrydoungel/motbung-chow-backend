@@ -61,7 +61,7 @@ module.exports = function (req, res, next) {
     
     req.user = {
       id: userId,
-      phone: decoded.phone
+      phone: decoded.phone,
       restaurantId: decoded.restaurantId
     };
 
