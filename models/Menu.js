@@ -7,12 +7,19 @@ const menuSchema = new mongoose.Schema(
       ref: "Restaurant",
       required: true,
     },
+
     name: { type: String, required: true },
+
     price: { type: Number, required: true },
+
     category: { type: String, default: "other" },
+
     image: { type: String, default: "" },
+
+    available: { type: Boolean, default: true } // ⭐ important
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model("Menu", menuSchema);
+
