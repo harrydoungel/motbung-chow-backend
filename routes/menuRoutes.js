@@ -6,13 +6,23 @@ const auth = require("../middleware/authMiddleware");
 
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+/* =========================
+   ENSURE UPLOADS FOLDER EXISTS
+========================= */
+const uploadDir = path.join(__dirname, "../uploads");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 /* =========================
    MULTER STORAGE CONFIG
 ========================= */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + path.extname(file.originalname);
@@ -31,10 +41,7 @@ router.get("/:restaurantId", async (req, res) => {
       restaurantId: req.params.restaurantId,
     });
 
-    res.json({
-      success: true,
-      items,
-    });
+    res.json({ success: true, items });
   } catch (err) {
     console.error("Menu fetch error:", err);
     res.status(500).json({ success: false });
@@ -61,7 +68,7 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
     res.json({ success: true, item });
   } catch (err) {
     console.error("Menu create error:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -78,7 +85,6 @@ router.patch("/:id/toggle", auth, async (req, res) => {
         .json({ success: false, message: "Item not found" });
     }
 
-    // flip available true/false
     item.available = !item.available;
     await item.save();
 
@@ -90,4 +96,3 @@ router.patch("/:id/toggle", auth, async (req, res) => {
 });
 
 module.exports = router;
-
