@@ -165,6 +165,8 @@ try {
       orders: []
     });
   });
+
+}
   
 /* =======================
    RESTAURANT ROUTES
