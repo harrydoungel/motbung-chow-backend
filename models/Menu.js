@@ -16,14 +16,10 @@ const menuSchema = new mongoose.Schema(
 
     image: { type: String, default: "" },
 
-    available: { type: Boolean, default: true } // ⭐ important
+    // ⭐ availability toggle for admin hide/show
+    available: { type: Boolean, default: true }
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model("Menu", menuSchema);
-available: {
-  type: Boolean,
-  default: true
-}
-
