@@ -73,16 +73,19 @@ router.patch("/:id/toggle", auth, async (req, res) => {
     const item = await Menu.findById(req.params.id);
 
     if (!item) {
-      return res.status(404).json({ success: false });
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found" });
     }
 
+    // flip available true/false
     item.available = !item.available;
     await item.save();
 
     res.json({ success: true, available: item.available });
   } catch (err) {
     console.error("Toggle error:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
