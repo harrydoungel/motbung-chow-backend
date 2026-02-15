@@ -14,7 +14,7 @@ const fs = require("fs");
 const uploadDir = path.join(__dirname, "../uploads");
 
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 /* =========================
@@ -43,8 +43,8 @@ router.get("/:restaurantId", async (req, res) => {
 
     res.json({ success: true, items });
   } catch (err) {
-    console.error("Menu fetch error:", err);
-    res.status(500).json({ success: false });
+    console.error("❌ Menu fetch error:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -67,31 +67,42 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 
     res.json({ success: true, item });
   } catch (err) {
-    console.error("Menu create error:", err);
+    console.error("❌ Menu create error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
 /* =========================
-   TOGGLE AVAILABILITY
+   TOGGLE AVAILABILITY (FIXED)
 ========================= */
 router.patch("/:id/toggle", auth, async (req, res) => {
   try {
-    const item = await Menu.findById(req.params.id);
+    const item = await Menu.findOne({
+      _id: req.params.id,
+      restaurantId: req.user.restaurantId, // 🔥 important security check
+    });
 
     if (!item) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Menu item not found",
+      });
     }
 
+    // flip availability
     item.available = !item.available;
     await item.save();
 
-    res.json({ success: true, available: item.available });
+    res.json({
+      success: true,
+      available: item.available,
+    });
   } catch (err) {
-    console.error("Toggle error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    console.error("❌ Toggle availability error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 });
 
