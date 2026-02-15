@@ -183,6 +183,12 @@ try {
   console.error("❌ FAILED to load restaurant routes:", error.message);
 }
 
+console.log("🔄 Loading menu routes...");
+const menuRoutes = require("./routes/menuRoutes");
+app.use("/api/menu", menuRoutes);
+console.log("✅ Menu routes loaded successfully");
+
+
 /* =======================
    DEBUG ENDPOINTS
 ======================= */
