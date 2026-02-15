@@ -15,6 +15,7 @@ const app = express();
 
 // ✅ BODY PARSING (FIX)
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 5001;

@@ -22,4 +22,8 @@ const menuSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Menu", menuSchema);
+available: {
+  type: Boolean,
+  default: true
+}
 

@@ -4,6 +4,24 @@ const router = express.Router();
 const Menu = require("../models/Menu");
 const auth = require("../middleware/authMiddleware");
 
+const multer = require("multer");
+const path = require("path");
+
+/* =========================
+   MULTER STORAGE CONFIG
+========================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + path.extname(file.originalname);
+    cb(null, uniqueName);
+  },
+});
+
+const upload = multer({ storage });
+
 /* =========================
    GET MENU BY RESTAURANT
 ========================= */
@@ -26,16 +44,18 @@ router.get("/:restaurantId", async (req, res) => {
 /* =========================
    ADD MENU ITEM (ADMIN)
 ========================= */
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, upload.single("image"), async (req, res) => {
   try {
-    const { name, price, category, image } = req.body;
+    const { name, price, category } = req.body;
+
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
 
     const item = await Menu.create({
       restaurantId: req.user.restaurantId,
       name,
       price,
       category,
-      image,
+      image: imagePath,
     });
 
     res.json({ success: true, item });
@@ -45,4 +65,26 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
+/* =========================
+   TOGGLE AVAILABILITY
+========================= */
+router.patch("/:id/toggle", auth, async (req, res) => {
+  try {
+    const item = await Menu.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({ success: false });
+    }
+
+    item.available = !item.available;
+    await item.save();
+
+    res.json({ success: true, available: item.available });
+  } catch (err) {
+    console.error("Toggle error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 module.exports = router;
+
