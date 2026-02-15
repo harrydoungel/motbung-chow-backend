@@ -166,11 +166,6 @@ try {
     });
   });
   
-  console.log("✅ Fallback order routes created");
-}
-  const menuRoutes = require("./routes/menuRoutes");
-  app.use("/api/menu", menuRoutes);
-
 /* =======================
    RESTAURANT ROUTES
 ======================= */
