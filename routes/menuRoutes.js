@@ -183,4 +183,29 @@ router.patch("/:id/toggle", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await Menu.findByIdAndDelete(id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu item not found",
+      });
+    }
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+
 module.exports = router;
