@@ -40,6 +40,7 @@ router.get("/:restaurantId", async (req, res) => {
   try {
     const items = await Menu.find({
       restaurantId: req.params.restaurantId,
+      available: true 
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, items });
