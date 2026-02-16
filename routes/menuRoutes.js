@@ -1,9 +1,9 @@
-const Restaurant = require("../models/Restaurant");
-const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 const Menu = require("../models/Menu");
+const Restaurant = require("../models/Restaurant");
 const auth = require("../middleware/authMiddleware");
 
 const multer = require("multer");
@@ -34,14 +34,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-/* =========================
-   GET MENU BY RESTAURANT
-========================= */
+/* =====================================================
+   1️⃣ CUSTOMER: GET MENU BY RESTAURANT CODE (MC1)
+===================================================== */
 router.get("/code/:restaurantCode", async (req, res) => {
   try {
     const { restaurantCode } = req.params;
 
-    // 1️⃣ Find restaurant by code (MC1)
     const restaurant = await Restaurant.findOne({
       restaurantCode: restaurantCode,
     });
@@ -53,10 +52,9 @@ router.get("/code/:restaurantCode", async (req, res) => {
       });
     }
 
-    // 2️⃣ Fetch menu using real ObjectId
     const items = await Menu.find({
       restaurantId: restaurant._id,
-      available: true, // only show available items to customer
+      available: true, // only visible items for customers
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -64,8 +62,9 @@ router.get("/code/:restaurantCode", async (req, res) => {
       restaurantId: restaurant._id,
       items,
     });
+
   } catch (err) {
-    console.error("❌ Menu fetch by code error:", err);
+    console.error("❌ Customer menu fetch error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
@@ -73,9 +72,41 @@ router.get("/code/:restaurantCode", async (req, res) => {
   }
 });
 
-/* =========================
-   ADD MENU ITEM (ADMIN)
-========================= */
+/* =====================================================
+   2️⃣ ADMIN: GET MENU BY RESTAURANT ID
+===================================================== */
+router.get("/:restaurantId", async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid restaurant ID",
+      });
+    }
+
+    const items = await Menu.find({
+      restaurantId: restaurantId,
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      items,
+    });
+
+  } catch (err) {
+    console.error("❌ Admin menu fetch error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+/* =====================================================
+   3️⃣ ADMIN: ADD MENU ITEM
+===================================================== */
 router.post("/", auth, upload.single("image"), async (req, res) => {
   try {
     const { name, price, category } = req.body;
@@ -98,29 +129,35 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
       available: true,
     });
 
-    res.json({ success: true, item });
+    res.json({
+      success: true,
+      item,
+    });
+
   } catch (err) {
     console.error("❌ Menu create error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 });
 
-/* =========================
-   TOGGLE AVAILABILITY (HIDE / AVAILABLE)
-========================= */
+/* =====================================================
+   4️⃣ ADMIN: TOGGLE AVAILABILITY
+===================================================== */
 router.patch("/:id/toggle", async (req, res) => {
   try {
-    console.log("TOGGLE ROUTE HIT");
-    console.log("ID RECEIVED:", req.params.id);
+    const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid menu ID",
       });
     }
 
-    const item = await Menu.findById(req.params.id);
+    const item = await Menu.findById(id);
 
     if (!item) {
       return res.status(404).json({
@@ -132,15 +169,13 @@ router.patch("/:id/toggle", async (req, res) => {
     item.available = !item.available;
     await item.save();
 
-    console.log("TOGGLE SUCCESS");
-
     res.json({
       success: true,
       available: item.available,
     });
 
   } catch (err) {
-    console.error("FULL TOGGLE ERROR:", err);
+    console.error("❌ Toggle availability error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
