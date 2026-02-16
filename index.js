@@ -45,7 +45,7 @@ app.use(cors({
     "https://hygo-59a87.web.app",
     "https://hygo-59a87.firebaseapp.com"
   ],
-  methods: ["GET","POST","PUT","DELETE"],
+  methods: ["GET","POST","PUT","DELETE","PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
