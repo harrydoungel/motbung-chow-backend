@@ -83,28 +83,11 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 /* =========================
    TOGGLE AVAILABILITY (HIDE / AVAILABLE)
 ========================= */
-router.patch("/:id/toggle", auth, async (req, res) => {
+router.patch("/:id/toggle", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate ID
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "Menu ID missing",
-      });
-    }
-
-    // Ensure auth middleware attached user
-    if (!req.user || !req.user.restaurantId) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid authentication",
-      });
-    }
-
     const item = await Menu.findById(id);
-
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -112,33 +95,20 @@ router.patch("/:id/toggle", auth, async (req, res) => {
       });
     }
 
-    // Ensure item belongs to this restaurant
-    if (!item.restaurantId || 
-        item.restaurantId.toString() !== req.user.restaurantId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    // Flip availability
     item.available = !item.available;
     await item.save();
 
-    return res.json({
+    res.json({
       success: true,
       available: item.available,
-      message: "Availability updated successfully",
     });
-
   } catch (err) {
-    console.error("❌ Toggle availability error:", err);
-    return res.status(500).json({
+    console.error("Toggle error:", err);
+    res.status(500).json({
       success: false,
-      message: "Server error while toggling availability",
+      message: err.message,
     });
   }
 });
-;
 
 module.exports = router;
