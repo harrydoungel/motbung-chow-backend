@@ -1,3 +1,4 @@
+const Restaurant = require("../models/Restaurant");
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
@@ -36,17 +37,39 @@ const upload = multer({ storage });
 /* =========================
    GET MENU BY RESTAURANT
 ========================= */
-router.get("/:restaurantId", async (req, res) => {
+router.get("/code/:restaurantCode", async (req, res) => {
   try {
+    const { restaurantCode } = req.params;
+
+    // 1️⃣ Find restaurant by code (MC1)
+    const restaurant = await Restaurant.findOne({
+      restaurantCode: restaurantCode,
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found",
+      });
+    }
+
+    // 2️⃣ Fetch menu using real ObjectId
     const items = await Menu.find({
-      restaurantId: req.params.restaurantId,
-      available: true 
+      restaurantId: restaurant._id,
+      available: true, // only show available items to customer
     }).sort({ createdAt: -1 });
 
-    res.json({ success: true, items });
+    res.json({
+      success: true,
+      restaurantId: restaurant._id,
+      items,
+    });
   } catch (err) {
-    console.error("❌ Menu fetch error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    console.error("❌ Menu fetch by code error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 });
 
