@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 
@@ -85,9 +86,18 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 ========================= */
 router.patch("/:id/toggle", async (req, res) => {
   try {
-    const { id } = req.params;
+    console.log("TOGGLE ROUTE HIT");
+    console.log("ID RECEIVED:", req.params.id);
 
-    const item = await Menu.findById(id);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid menu ID",
+      });
+    }
+
+    const item = await Menu.findById(req.params.id);
+
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -98,12 +108,15 @@ router.patch("/:id/toggle", async (req, res) => {
     item.available = !item.available;
     await item.save();
 
+    console.log("TOGGLE SUCCESS");
+
     res.json({
       success: true,
       available: item.available,
     });
+
   } catch (err) {
-    console.error("Toggle error:", err);
+    console.error("FULL TOGGLE ERROR:", err);
     res.status(500).json({
       success: false,
       message: err.message,
