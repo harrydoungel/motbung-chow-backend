@@ -87,10 +87,19 @@ router.patch("/:id/toggle", auth, async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Validate ID
     if (!id) {
       return res.status(400).json({
         success: false,
         message: "Menu ID missing",
+      });
+    }
+
+    // Ensure auth middleware attached user
+    if (!req.user || !req.user.restaurantId) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authentication",
       });
     }
 
@@ -103,29 +112,33 @@ router.patch("/:id/toggle", auth, async (req, res) => {
       });
     }
 
-    // 🔒 SECURITY: ensure item belongs to this restaurant
-    if (item.restaurantId.toString() !== req.user.restaurantId) {
+    // Ensure item belongs to this restaurant
+    if (!item.restaurantId || 
+        item.restaurantId.toString() !== req.user.restaurantId.toString()) {
       return res.status(403).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    // 🔁 Flip availability
+    // Flip availability
     item.available = !item.available;
     await item.save();
 
-    res.json({
+    return res.json({
       success: true,
       available: item.available,
+      message: "Availability updated successfully",
     });
+
   } catch (err) {
     console.error("❌ Toggle availability error:", err);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Server error while toggling availability",
     });
   }
 });
+;
 
 module.exports = router;
