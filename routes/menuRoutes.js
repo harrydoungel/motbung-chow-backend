@@ -39,7 +39,7 @@ router.get("/:restaurantId", async (req, res) => {
   try {
     const items = await Menu.find({
       restaurantId: req.params.restaurantId,
-    });
+    }).sort({ createdAt: -1 });
 
     res.json({ success: true, items });
   } catch (err) {
@@ -55,6 +55,13 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
   try {
     const { name, price, category } = req.body;
 
+    if (!name || !price) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and price are required",
+      });
+    }
+
     const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
 
     const item = await Menu.create({
@@ -63,6 +70,7 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
       price,
       category,
       image: imagePath,
+      available: true,
     });
 
     res.json({ success: true, item });
@@ -73,14 +81,20 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 });
 
 /* =========================
-   TOGGLE AVAILABILITY (FIXED)
+   TOGGLE AVAILABILITY (HIDE / AVAILABLE)
 ========================= */
 router.patch("/:id/toggle", auth, async (req, res) => {
   try {
-    const item = await Menu.findOne({
-      _id: req.params.id,
-      restaurantId: req.user.restaurantId, // 🔥 important security check
-    });
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Menu ID missing",
+      });
+    }
+
+    const item = await Menu.findById(id);
 
     if (!item) {
       return res.status(404).json({
@@ -89,7 +103,15 @@ router.patch("/:id/toggle", auth, async (req, res) => {
       });
     }
 
-    // flip availability
+    // 🔒 SECURITY: ensure item belongs to this restaurant
+    if (item.restaurantId.toString() !== req.user.restaurantId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // 🔁 Flip availability
     item.available = !item.available;
     await item.save();
 
