@@ -111,7 +111,7 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 
     // 🔹 Upload to Cloudinary if image exists
     if (req.file) {
-      const cloudinary = require("../js/cloudinary");
+      const cloudinary = require("../config/cloudinary");
 
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: "motbung-menu",
