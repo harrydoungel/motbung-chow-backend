@@ -6,29 +6,18 @@ const Menu = require("../models/Menu");
 const Restaurant = require("../models/Restaurant");
 const auth = require("../middleware/authMiddleware");
 
+/* =========================
+   CLOUDINARY + MULTER SETUP
+========================= */
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../js/cloudinary"); // ← your path you mentioned
 
-/* =========================
-   ENSURE UPLOADS FOLDER EXISTS
-========================= */
-const uploadDir = path.join(__dirname, "../uploads");
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-/* =========================
-   MULTER STORAGE CONFIG
-========================= */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + path.extname(file.originalname);
-    cb(null, uniqueName);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "motbung-menu",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });
 
@@ -54,7 +43,7 @@ router.get("/code/:restaurantCode", async (req, res) => {
 
     const items = await Menu.find({
       restaurantId: restaurant._id,
-      available: true, // only visible items for customers
+      available: true,
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -105,7 +94,7 @@ router.get("/:restaurantId", async (req, res) => {
 });
 
 /* =====================================================
-   3️⃣ ADMIN: ADD MENU ITEM
+   3️⃣ ADMIN: ADD MENU ITEM (CLOUDINARY UPLOAD)
 ===================================================== */
 router.post("/", auth, upload.single("image"), async (req, res) => {
   try {
@@ -118,14 +107,12 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
       });
     }
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
-
     const item = await Menu.create({
       restaurantId: req.user.restaurantId,
       name,
       price,
       category,
-      image: imagePath,
+      image: req.file ? req.file.path : "", // ← CLOUDINARY URL saved here
       available: true,
     });
 
@@ -183,6 +170,9 @@ router.patch("/:id/toggle", async (req, res) => {
   }
 });
 
+/* =====================================================
+   5️⃣ ADMIN: DELETE MENU ITEM
+===================================================== */
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,6 +196,5 @@ router.delete("/:id", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
