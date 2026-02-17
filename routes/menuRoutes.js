@@ -11,7 +11,7 @@ const auth = require("../middleware/authMiddleware");
 ========================= */
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../js/cloudinary"); // ← your path you mentioned
+const cloudinary = require("../config/cloudinary");
 
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -109,15 +109,9 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 
     let imageUrl = "";
 
-    // 🔹 Upload to Cloudinary if image exists
+    // CloudinaryStorage already uploads the image
     if (req.file) {
-      const cloudinary = require("../config/cloudinary");
-
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "motbung-menu",
-      });
-
-      imageUrl = result.secure_url; // ✅ THIS is what must be saved
+      imageUrl = req.file.path; // ✅ this is already the Cloudinary URL
     }
 
     const item = await Menu.create({
@@ -142,7 +136,6 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
     });
   }
 });
-
 
 /* =====================================================
    4️⃣ ADMIN: TOGGLE AVAILABILITY
