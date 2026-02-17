@@ -107,12 +107,25 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
       });
     }
 
+    let imageUrl = "";
+
+    // 🔹 Upload to Cloudinary if image exists
+    if (req.file) {
+      const cloudinary = require("../js/cloudinary");
+
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "motbung-menu",
+      });
+
+      imageUrl = result.secure_url; // ✅ THIS is what must be saved
+    }
+
     const item = await Menu.create({
       restaurantId: req.user.restaurantId,
       name,
       price,
       category,
-      image: req.file ? req.file.path : "", // ← CLOUDINARY URL saved here
+      image: imageUrl,
       available: true,
     });
 
@@ -129,6 +142,7 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
     });
   }
 });
+
 
 /* =====================================================
    4️⃣ ADMIN: TOGGLE AVAILABILITY
