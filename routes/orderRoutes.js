@@ -116,9 +116,10 @@ router.post("/create-order", auth, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Create order error:", err);
+
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: err.message,
     });
   }
 });
