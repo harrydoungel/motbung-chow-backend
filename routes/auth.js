@@ -71,7 +71,7 @@ router.post("/phone-login", async (req, res) => {
         name: "New Restaurant",
         phone: phoneNumber,
         location: "",
-        restaurantCode: "MC" + (count + 1), // MC1, MC2...
+        restaurantCode: "MC" + (count + 1),
       });
 
       console.log("🏪 Restaurant auto-created:", restaurant.restaurantCode);
@@ -92,7 +92,7 @@ router.post("/phone-login", async (req, res) => {
       {
         id: uid,
         phone: phoneNumber,
-        restaurantId: restaurant._id,
+        restaurantCode: restaurant.restaurantCode, // ✅ USE CODE (NOT _id)
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -101,9 +101,9 @@ router.post("/phone-login", async (req, res) => {
     return res.json({
       success: true,
       token: sessionToken,
-      restaurantId: restaurant._id,
       restaurantCode: restaurant.restaurantCode,
     });
+
   } catch (err) {
     console.error("❌ LOGIN FAILED:", err);
 

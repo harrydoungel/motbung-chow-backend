@@ -152,23 +152,23 @@ router.get("/my-orders", auth, async (req, res) => {
 ======================= */
 router.get("/restaurant", auth, async (req, res) => {
   try {
-    const restaurantId = req.user.restaurantId;
+    const restaurantCode = req.user.restaurantCode;
 
-    if (!restaurantId) {
+    if (!restaurantCode) {
       return res.status(403).json({
         success: false,
         message: "Restaurant access only",
       });
     }
 
-    const orders = await Order.find({ restaurantId }).sort({
-      createdAt: -1,
-    });
+    const orders = await Order.find({ restaurantId: restaurantCode })
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
       orders,
     });
+
   } catch (err) {
     console.error("❌ Fetch restaurant orders error:", err);
     res.status(500).json({
@@ -177,5 +177,5 @@ router.get("/restaurant", auth, async (req, res) => {
     });
   }
 });
-
+ 
 module.exports = router;

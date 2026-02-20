@@ -41,7 +41,7 @@ module.exports = function (req, res, next) {
     req.user = {
       id: decoded.id,                // ← string
       phone: decoded.phone,
-      restaurantId: decoded.restaurantId, // ← Mongo ObjectId string (OK)
+      restaurantCode: decoded.restaurantCode,
     };
 
     console.log("✅ Request user set:", req.user);
