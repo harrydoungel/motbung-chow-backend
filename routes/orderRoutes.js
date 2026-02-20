@@ -15,7 +15,7 @@ const razorpay = new Razorpay({
 });
 
 /* =======================
-   ADMIN: GET ALL ORDERS (SUPER ADMIN ONLY – protect later)
+   ADMIN: GET ALL ORDERS
 ======================= */
 router.get("/", async (req, res) => {
   try {
@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
 });
 
 /* =======================
-   CREATE ORDER (SINGLE RESTAURANT ONLY)
+   CREATE ORDER
 ======================= */
 router.post("/create-order", auth, async (req, res) => {
   try {
@@ -40,10 +40,10 @@ router.post("/create-order", auth, async (req, res) => {
       paymentMethod,
       items,
       customerName,
-      restaurantId,
+      restaurantId, // coming from frontend (MC1)
     } = req.body;
 
-    /* ========= BASIC VALIDATION ========= */
+    /* ========= VALIDATION ========= */
     if (!location || !paymentMethod || !customerName || !restaurantId) {
       return res.status(400).json({
         success: false,
@@ -58,7 +58,7 @@ router.post("/create-order", auth, async (req, res) => {
       });
     }
 
-    /* ========= ENSURE ALL ITEMS BELONG TO SAME RESTAURANT ========= */
+    /* ========= ENSURE SAME RESTAURANT ========= */
     const invalidItem = items.find(
       (item) => String(item.restaurantId) !== String(restaurantId)
     );
@@ -73,12 +73,12 @@ router.post("/create-order", auth, async (req, res) => {
     /* ========= CALCULATE TOTAL ========= */
     const amount = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-    /* ========= CREATE RAZORPAY ORDER (ONLINE ONLY) ========= */
+    /* ========= RAZORPAY (ONLINE ONLY) ========= */
     let razorpayOrderId = null;
 
     if (paymentMethod === "online") {
       const razorpayOrder = await razorpay.orders.create({
-        amount: amount * 100, // paise
+        amount: amount * 100,
         currency: "INR",
         receipt: "rcpt_" + Date.now(),
       });
@@ -104,7 +104,8 @@ router.post("/create-order", auth, async (req, res) => {
       paymentMethod: paymentMethod === "cod" ? "COD" : "ONLINE",
       status: paymentMethod === "cod" ? "COD_PENDING" : "PENDING",
 
-      restaurantId,
+      // 🔥 FIXED HERE
+      restaurantCode: restaurantId,
     });
 
     await order.save();
@@ -114,6 +115,7 @@ router.post("/create-order", auth, async (req, res) => {
       message: "Order created successfully",
       order,
     });
+
   } catch (err) {
     console.error("❌ Create order error:", err);
 
@@ -131,14 +133,14 @@ router.get("/my-orders", auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const orders = await Order.find({ user: userId }).sort({
-      createdAt: -1,
-    });
+    const orders = await Order.find({ user: userId })
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
       orders,
     });
+
   } catch (err) {
     console.error("❌ Fetch my orders error:", err);
     res.status(500).json({
@@ -162,7 +164,8 @@ router.get("/restaurant", auth, async (req, res) => {
       });
     }
 
-    const orders = await Order.find({ restaurantId: restaurantCode })
+    // 🔥 FIXED HERE
+    const orders = await Order.find({ restaurantCode })
       .sort({ createdAt: -1 });
 
     res.json({
@@ -178,5 +181,5 @@ router.get("/restaurant", auth, async (req, res) => {
     });
   }
 });
- 
+
 module.exports = router;
