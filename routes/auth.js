@@ -92,6 +92,7 @@ router.post("/phone-login", async (req, res) => {
       {
         id: uid,
         phone: phoneNumber,
+        restaurantId: restaurant._id,
         restaurantCode: restaurant.restaurantCode, // ✅ USE CODE (NOT _id)
       },
       process.env.JWT_SECRET,
