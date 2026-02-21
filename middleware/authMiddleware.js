@@ -41,6 +41,7 @@ module.exports = function (req, res, next) {
     req.user = {
       id: decoded.id,                // ← string
       phone: decoded.phone,
+      restaurantId: decoded.restaurantId,
       restaurantCode: decoded.restaurantCode,
     };
 
