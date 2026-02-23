@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
 
 const auth = require("../middleware/authMiddleware");
 const Order = require("../models/Order");
-
 const Razorpay = require("razorpay");
 
 /* =======================
@@ -22,13 +22,13 @@ router.get("/", async (req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json({ success: true, orders });
   } catch (err) {
-    console.error("❌ Fetch all orders error:", err);
+    console.error("Fetch all orders error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 /* =======================
-   CREATE ORDER
+   CREATE ORDER (ONLINE ONLY)
 ======================= */
 router.post("/create-order", auth, async (req, res) => {
   try {
@@ -42,7 +42,7 @@ router.post("/create-order", auth, async (req, res) => {
       restaurantId,
       deliveryFee = 0,
       tip = 0,
-      platformFee = 0
+      platformFee = 0,
     } = req.body;
 
     if (!location || !customerName || !restaurantId) {
@@ -78,12 +78,14 @@ router.post("/create-order", auth, async (req, res) => {
     const totalAmount =
       itemsTotal + platformFee + deliveryFee + tip;
 
+    // 🔥 Create Razorpay order (amount in paise)
     const razorpayOrder = await razorpay.orders.create({
       amount: totalAmount * 100,
       currency: "INR",
       receipt: "rcpt_" + Date.now(),
     });
 
+    // 🔥 Save order in DB
     const order = new Order({
       user: userId,
       orderId: razorpayOrder.id,
@@ -94,6 +96,8 @@ router.post("/create-order", auth, async (req, res) => {
       deliveryFee,
       tip,
       totalAmount,
+      amount: totalAmount,
+      paymentMethod: "ONLINE",
       location,
       mapLink: mapLink || "",
       restaurantCode: restaurantId,
@@ -107,7 +111,6 @@ router.post("/create-order", auth, async (req, res) => {
       success: true,
       razorpayOrderId: razorpayOrder.id,
       amount: totalAmount,
-      order,
     });
 
   } catch (err) {
@@ -119,8 +122,9 @@ router.post("/create-order", auth, async (req, res) => {
   }
 });
 
-const crypto = require("crypto");
-
+/* =======================
+   VERIFY PAYMENT
+======================= */
 router.post("/verify-payment", auth, async (req, res) => {
   try {
     const {
@@ -143,10 +147,12 @@ router.post("/verify-payment", auth, async (req, res) => {
       });
     }
 
-    // Update order status in DB
     await Order.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id },
-      { status: "CONFIRMED" }
+      {
+        status: "CONFIRMED",
+        paymentId: razorpay_payment_id,
+      }
     );
 
     res.json({ success: true });
@@ -170,13 +176,10 @@ router.get("/my-orders", auth, async (req, res) => {
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 });
 
-    res.json({
-      success: true,
-      orders,
-    });
+    res.json({ success: true, orders });
 
-  } catch (err) {router.get
-    console.error("❌ Fetch my orders error:", err);
+  } catch (err) {
+    console.error("Fetch my orders error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -198,17 +201,13 @@ router.get("/restaurant", auth, async (req, res) => {
       });
     }
 
-    // 🔥 FIXED HERE
     const orders = await Order.find({ restaurantCode })
       .sort({ createdAt: -1 });
 
-    res.json({
-      success: true,
-      orders,
-    });
+    res.json({ success: true, orders });
 
   } catch (err) {
-    console.error("❌ Fetch restaurant orders error:", err);
+    console.error("Fetch restaurant orders error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
