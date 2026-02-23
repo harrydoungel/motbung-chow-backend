@@ -15,11 +15,13 @@ const razorpay = new Razorpay({
 });
 
 /* =======================
-   ADMIN: GET ALL ORDERS
+   ADMIN: GET ALL ORDERS (OPTIONAL SUPERADMIN)
 ======================= */
 router.get("/", async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    const orders = await Order.find({ status: "CONFIRMED" })
+      .sort({ createdAt: -1 });
+
     res.json({ success: true, orders });
   } catch (err) {
     console.error("Fetch all orders error:", err);
@@ -28,7 +30,7 @@ router.get("/", async (req, res) => {
 });
 
 /* =======================
-   CREATE ORDER (ONLINE ONLY)
+   CREATE ORDER (ONLINE)
 ======================= */
 router.post("/create-order", auth, async (req, res) => {
   try {
@@ -70,6 +72,13 @@ router.post("/create-order", auth, async (req, res) => {
       });
     }
 
+    // 🔥 Auto-clean old abandoned pending orders (15 mins)
+    await Order.deleteMany({
+      user: userId,
+      status: "PENDING",
+      createdAt: { $lt: new Date(Date.now() - 15 * 60 * 1000) }
+    });
+
     const itemsTotal = items.reduce(
       (sum, i) => sum + i.price * i.qty,
       0
@@ -78,14 +87,14 @@ router.post("/create-order", auth, async (req, res) => {
     const totalAmount =
       itemsTotal + platformFee + deliveryFee + tip;
 
-    // 🔥 Create Razorpay order (amount in paise)
+    // 🔥 Create Razorpay order
     const razorpayOrder = await razorpay.orders.create({
       amount: totalAmount * 100,
       currency: "INR",
       receipt: "rcpt_" + Date.now(),
     });
 
-    // 🔥 Save order in DB
+    // 🔥 Save as PENDING
     const order = new Order({
       user: userId,
       orderId: razorpayOrder.id,
@@ -147,6 +156,7 @@ router.post("/verify-payment", auth, async (req, res) => {
       });
     }
 
+    // ✅ Only mark as CONFIRMED after payment success
     await Order.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id },
       {
@@ -173,8 +183,10 @@ router.get("/my-orders", auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const orders = await Order.find({ user: userId })
-      .sort({ createdAt: -1 });
+    const orders = await Order.find({
+      user: userId,
+      status: "CONFIRMED"
+    }).sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
 
@@ -201,8 +213,11 @@ router.get("/restaurant", auth, async (req, res) => {
       });
     }
 
-    const orders = await Order.find({ restaurantCode })
-      .sort({ createdAt: -1 });
+    // ✅ Only show confirmed orders to restaurant admin
+    const orders = await Order.find({
+      restaurantCode,
+      status: "CONFIRMED"
+    }).sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
 
