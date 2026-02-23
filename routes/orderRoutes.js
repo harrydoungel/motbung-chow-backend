@@ -37,14 +37,15 @@ router.post("/create-order", auth, async (req, res) => {
     const {
       location,
       mapLink,
-      paymentMethod,
       items,
       customerName,
-      restaurantId, // coming from frontend (MC1)
+      restaurantId,
+      deliveryFee = 0,
+      tip = 0,
+      platformFee = 0
     } = req.body;
 
-    /* ========= VALIDATION ========= */
-    if (!location || !paymentMethod || !customerName || !restaurantId) {
+    if (!location || !customerName || !restaurantId) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
@@ -58,7 +59,6 @@ router.post("/create-order", auth, async (req, res) => {
       });
     }
 
-    /* ========= ENSURE SAME RESTAURANT ========= */
     const invalidItem = items.find(
       (item) => String(item.restaurantId) !== String(restaurantId)
     );
@@ -66,62 +66,96 @@ router.post("/create-order", auth, async (req, res) => {
     if (invalidItem) {
       return res.status(400).json({
         success: false,
-        message: "All items must belong to the same restaurant",
+        message: "All items must belong to same restaurant",
       });
     }
 
-    /* ========= CALCULATE TOTAL ========= */
-    const amount = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+    const itemsTotal = items.reduce(
+      (sum, i) => sum + i.price * i.qty,
+      0
+    );
 
-    /* ========= RAZORPAY (ONLINE ONLY) ========= */
-    let razorpayOrderId = null;
+    const totalAmount =
+      itemsTotal + platformFee + deliveryFee + tip;
 
-    if (paymentMethod === "online") {
-      const razorpayOrder = await razorpay.orders.create({
-        amount: amount * 100,
-        currency: "INR",
-        receipt: "rcpt_" + Date.now(),
-      });
+    const razorpayOrder = await razorpay.orders.create({
+      amount: totalAmount * 100,
+      currency: "INR",
+      receipt: "rcpt_" + Date.now(),
+    });
 
-      razorpayOrderId = razorpayOrder.id;
-    }
-
-    /* ========= CREATE ORDER DOCUMENT ========= */
     const order = new Order({
       user: userId,
-      orderId:
-        paymentMethod === "cod"
-          ? "COD_" + Date.now()
-          : razorpayOrderId,
-
+      orderId: razorpayOrder.id,
       customerName,
       items,
-      amount,
-
+      itemsTotal,
+      platformFee,
+      deliveryFee,
+      tip,
+      totalAmount,
       location,
       mapLink: mapLink || "",
-
-      paymentMethod: paymentMethod === "cod" ? "COD" : "ONLINE",
-      status: paymentMethod === "cod" ? "COD_PENDING" : "PENDING",
-
-      // 🔥 FIXED HERE
       restaurantCode: restaurantId,
+      razorpayOrderId: razorpayOrder.id,
+      status: "PENDING",
     });
 
     await order.save();
 
     return res.json({
       success: true,
-      message: "Order created successfully",
+      razorpayOrderId: razorpayOrder.id,
+      amount: totalAmount,
       order,
     });
 
   } catch (err) {
-    console.error("❌ Create order error:", err);
-
+    console.error("Create order error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
+    });
+  }
+});
+
+const crypto = require("crypto");
+
+router.post("/verify-payment", auth, async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.json({
+        success: false,
+        message: "Invalid signature",
+      });
+    }
+
+    // Update order status in DB
+    await Order.findOneAndUpdate(
+      { razorpayOrderId: razorpay_order_id },
+      { status: "CONFIRMED" }
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Verify payment error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Verification failed",
     });
   }
 });
@@ -141,7 +175,7 @@ router.get("/my-orders", auth, async (req, res) => {
       orders,
     });
 
-  } catch (err) {
+  } catch (err) {router.get
     console.error("❌ Fetch my orders error:", err);
     res.status(500).json({
       success: false,
