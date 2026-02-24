@@ -1,9 +1,12 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 
 const Restaurant = require("../models/Restaurant");
-const User = require("../models/User");
 const DeliveryPartner = require("../models/DeliveryPartner");
+
+// Get existing compiled User model safely
+const User = mongoose.models.User;
 
 // GET ALL RESTAURANTS
 router.get("/restaurants", async (req, res) => {
@@ -13,7 +16,7 @@ router.get("/restaurants", async (req, res) => {
 
 // GET ALL CUSTOMERS
 router.get("/customers", async (req, res) => {
-  const customers = await User.find({ role: "customer" }).sort({ createdAt: -1 });
+  const customers = await User.find().sort({ createdAt: -1 });
   res.json(customers);
 });
 
