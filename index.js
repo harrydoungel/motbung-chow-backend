@@ -15,7 +15,7 @@ console.log("🔥 MOTBUNG CHOW BACKEND STARTED 🔥");
 const app = express();
 
 // ✅ BODY PARSING (FIX)
-app.use(express.json());
+app.use("/api/orders/webhook", express.raw({ type: "application/json" }));
 app.use("/uploads", express.static("uploads"));
 app.use(express.urlencoded({ extended: true }));
 

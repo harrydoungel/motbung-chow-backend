@@ -177,6 +177,68 @@ router.post("/verify-payment", auth, async (req, res) => {
 });
 
 /* =======================
+   RAZORPAY WEBHOOK
+======================= */
+
+router.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  try {
+
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    const signature = req.headers["x-razorpay-signature"];
+
+    const expectedSignature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(req.body)
+      .digest("hex");
+
+    if (signature !== expectedSignature) {
+      console.error("❌ Invalid webhook signature");
+      return res.status(400).json({ success: false });
+    }
+
+    const event = JSON.parse(req.body.toString());
+
+    // Payment captured (SUCCESS)
+    if (event.event === "payment.captured") {
+
+      const razorpayOrderId = event.payload.payment.entity.order_id;
+      const paymentId = event.payload.payment.entity.id;
+
+      const updated = await Order.findOneAndUpdate(
+        { razorpayOrderId },
+        {
+          status: "CONFIRMED",
+          paymentId: paymentId,
+        },
+        { new: true }
+      );
+
+      console.log("✅ Webhook confirmed order:", razorpayOrderId);
+    }
+
+    // Payment failed
+    if (event.event === "payment.failed") {
+
+      const razorpayOrderId = event.payload.payment.entity.order_id;
+
+      await Order.findOneAndUpdate(
+        { razorpayOrderId },
+        { status: "FAILED" }
+      );
+
+      console.log("❌ Webhook marked order FAILED:", razorpayOrderId);
+    }
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Webhook error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+/* =======================
    MY ORDERS (CUSTOMER)
 ======================= */
 router.get("/my-orders", auth, async (req, res) => {
