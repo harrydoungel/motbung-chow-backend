@@ -14,10 +14,19 @@ console.log("🔥 MOTBUNG CHOW BACKEND STARTED 🔥");
 
 const app = express();
 
-// ✅ BODY PARSING (FIX)
+// ✅ BODY PARSING (CORRECT ORDER)
+
+// 1️⃣ Webhook must use RAW body (for signature verification)
 app.use("/api/orders/webhook", express.raw({ type: "application/json" }));
-app.use("/uploads", express.static("uploads"));
+
+// 2️⃣ Normal JSON parser (for ALL other APIs)
+app.use(express.json());
+
+// 3️⃣ URL encoded forms
 app.use(express.urlencoded({ extended: true }));
+
+// 4️⃣ Static uploads
+app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 5001;
 
