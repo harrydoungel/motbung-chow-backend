@@ -211,7 +211,7 @@ app.get("/api/debug/orders", async (req, res) => {
         orderId: o.orderId,
         user: o.user,
         userString: o.user.toString(),
-        amount: o.amount,
+        amount: o.totalAmount,
         status: o.status,
         paymentMethod: o.paymentMethod,
         createdAt: o.createdAt
