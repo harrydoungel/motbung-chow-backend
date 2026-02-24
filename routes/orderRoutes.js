@@ -105,8 +105,6 @@ router.post("/create-order", auth, async (req, res) => {
       deliveryFee,
       tip,
       totalAmount,
-      amount: totalAmount,
-      paymentMethod: "ONLINE",
       location,
       mapLink: mapLink || "",
       restaurantCode: restaurantId,
@@ -161,7 +159,7 @@ router.post("/verify-payment", auth, async (req, res) => {
       { razorpayOrderId: razorpay_order_id },
       {
         status: "CONFIRMED",
-        paymentId: razorpay_payment_id,
+        razorpayPaymentId: razorpay_payment_id,
       }
     );
 
@@ -209,7 +207,7 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
         { razorpayOrderId },
         {
           status: "CONFIRMED",
-          paymentId: paymentId,
+          razorpayPaymentId: paymentId,
         },
         { new: true }
       );

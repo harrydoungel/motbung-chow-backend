@@ -195,6 +195,17 @@ const menuRoutes = require("./routes/menuRoutes");
 app.use("/api/menu", menuRoutes);
 console.log("✅ Menu routes loaded successfully");
 
+/* =======================
+   CENTRAL CONTROL ROUTES
+======================= */
+try {
+  console.log("🔄 Loading central routes...");
+  const centralRoutes = require("./routes/centralRoutes");
+  app.use("/api/central", centralRoutes);
+  console.log("✅ Central routes loaded successfully");
+} catch (error) {
+  console.error("❌ FAILED to load central routes:", error.message);
+}
 
 /* =======================
    DEBUG ENDPOINTS
