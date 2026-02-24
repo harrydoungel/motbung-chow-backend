@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const restaurantSchema = new mongoose.Schema(
+const deliveryPartnerSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -13,17 +13,6 @@ const restaurantSchema = new mongoose.Schema(
       unique: true,
     },
 
-    location: {
-      type: String,
-      default: "",
-    },
-
-    restaurantCode: {
-      type: String,
-      unique: true,
-    },
-
-    // 🔥 IMPORTANT FOR SPLIT
     razorpayAccountId: {
       type: String,
       default: "",
@@ -37,4 +26,4 @@ const restaurantSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Restaurant", restaurantSchema);
+module.exports = mongoose.model("DeliveryPartner", deliveryPartnerSchema);

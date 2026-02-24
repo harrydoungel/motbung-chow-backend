@@ -14,15 +14,44 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
 
+    // This will store Razorpay Order ID
     orderId: {
       type: String,
       required: true,
     },
 
-    amount: {
+    /* =========================
+       PAYMENT BREAKDOWN
+    ========================== */
+
+    itemsTotal: {
       type: Number,
       required: true,
     },
+
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+
+    tip: {
+      type: Number,
+      default: 0,
+    },
+
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+
+    /* =========================
+       DELIVERY INFO
+    ========================== */
 
     location: {
       type: String,
@@ -34,15 +63,28 @@ const orderSchema = new mongoose.Schema(
       default: "",
     },
 
+    /* =========================
+       RELATIONS
+    ========================== */
+
     restaurantCode: {
       type: String,
       required: true,
       index: true,
     },
 
-    paymentMethod: {
+    deliveryPartnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DeliveryPartner",
+      default: null,
+    },
+
+    /* =========================
+       RAZORPAY INFO
+    ========================== */
+
+    razorpayOrderId: {
       type: String,
-      enum: ["ONLINE", "COD"],
       required: true,
     },
 
@@ -50,6 +92,25 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    splitTransferred: {
+      type: Boolean,
+      default: false,
+    },
+
+    /* =========================
+       ORDER STATUS
+    ========================== */
+
+    status: {
+      type: String,
+      enum: ["PENDING", "PAID", "FAILED"],
+      default: "PENDING",
+    },
+
+    /* =========================
+       ITEMS
+    ========================== */
 
     items: [
       {
@@ -59,12 +120,6 @@ const orderSchema = new mongoose.Schema(
         restaurantCode: String,
       },
     ],
-
-    status: {
-      type: String,
-      enum: ["PENDING", "PAID", "COD_PENDING", "DELIVERED"],
-      default: "PENDING",
-    },
   },
   { timestamps: true }
 );
