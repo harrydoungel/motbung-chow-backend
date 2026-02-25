@@ -4,6 +4,7 @@ const crypto = require("crypto");
 
 const auth = require("../middleware/authMiddleware");
 const Order = require("../models/Order");
+const Restaurant = require("../models/Restaurant");
 const Razorpay = require("razorpay");
 
 /* =======================
@@ -290,12 +291,23 @@ router.get("/restaurant", auth, async (req, res) => {
   }
 });
 
+// ==============================
+// RESTAURANT ANALYTICS
+// ==============================
 router.get("/by-restaurant/:id", async (req, res) => {
   try {
-    const restaurantId = req.params.id;
 
-    const orders = await Order.find({ restaurantId })
-      .sort({ createdAt: -1 });
+    // Step 1: Find restaurant
+    const restaurant = await Restaurant.findById(req.params.id);
+
+    if (!restaurant) {
+      return res.json({ success: false });
+    }
+
+    // Step 2: Find orders by restaurantCode
+    const orders = await Order.find({
+      restaurantCode: restaurant.restaurantCode
+    }).sort({ createdAt: -1 });
 
     const totalRevenue = orders.reduce(
       (sum, order) => sum + (order.totalAmount || 0),
@@ -310,35 +322,67 @@ router.get("/by-restaurant/:id", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Restaurant orders error:", err);
+    console.error("Restaurant analytics error:", err);
     res.status(500).json({ success: false });
   }
 });
 
+
+// ==============================
+// CUSTOMER ANALYTICS
+// ==============================
 router.get("/by-customer/:id", async (req, res) => {
-  const orders = await Order.find({ customerId: req.params.id });
+  try {
 
-  const totalSpent = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    // Your Order model uses "user"
+    const orders = await Order.find({
+      user: req.params.id
+    }).sort({ createdAt: -1 });
 
-  res.json({
-    success: true,
-    totalOrders: orders.length,
-    totalSpent,
-    orders
-  });
+    const totalSpent = orders.reduce(
+      (sum, o) => sum + (o.totalAmount || 0),
+      0
+    );
+
+    res.json({
+      success: true,
+      totalOrders: orders.length,
+      totalSpent,
+      orders
+    });
+
+  } catch (err) {
+    console.error("Customer analytics error:", err);
+    res.status(500).json({ success: false });
+  }
 });
 
+
+// ==============================
+// DRIVER ANALYTICS
+// ==============================
 router.get("/by-driver/:id", async (req, res) => {
-  const orders = await Order.find({ driverId: req.params.id });
+  try {
 
-  const totalEarnings = orders.reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+    const orders = await Order.find({
+      deliveryPartnerId: req.params.id
+    }).sort({ createdAt: -1 });
 
-  res.json({
-    success: true,
-    totalDeliveries: orders.length,
-    totalEarnings,
-    orders
-  });
+    const totalEarnings = orders.reduce(
+      (sum, o) => sum + (o.deliveryFee || 0),
+      0
+    );
+
+    res.json({
+      success: true,
+      totalDeliveries: orders.length,
+      totalEarnings,
+      orders
+    });
+
+  } catch (err) {
+    console.error("Driver analytics error:", err);
+    res.status(500).json({ success: false });
+  }
 });
-
 module.exports = router;
