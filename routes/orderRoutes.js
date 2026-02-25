@@ -314,4 +314,31 @@ router.get("/by-restaurant/:id", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+router.get("/by-customer/:id", async (req, res) => {
+  const orders = await Order.find({ customerId: req.params.id });
+
+  const totalSpent = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+  res.json({
+    success: true,
+    totalOrders: orders.length,
+    totalSpent,
+    orders
+  });
+});
+
+router.get("/by-driver/:id", async (req, res) => {
+  const orders = await Order.find({ driverId: req.params.id });
+
+  const totalEarnings = orders.reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+
+  res.json({
+    success: true,
+    totalDeliveries: orders.length,
+    totalEarnings,
+    orders
+  });
+});
+
 module.exports = router;
