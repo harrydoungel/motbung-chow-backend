@@ -13,7 +13,7 @@ const restaurantSchema = new mongoose.Schema(
       unique: true,
     },
 
-    location: {
+    address: {
       type: String,
       default: "",
     },
