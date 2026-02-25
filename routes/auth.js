@@ -70,7 +70,7 @@ router.post("/phone-login", async (req, res) => {
       restaurant = await Restaurant.create({
         name: "Restaurant " + phoneNumber.slice(-4),
         phone: phoneNumber,
-        Address: "",
+        address: "",
         restaurantCode: "MC" + (count + 1),
       });
 

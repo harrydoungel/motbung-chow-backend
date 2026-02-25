@@ -130,4 +130,26 @@ router.post("/login", auth, async (req, res) => {
   }
 });
 
+router.put("/update", async (req, res) => {
+  try {
+    const { restaurantId, name, address } = req.body;
+
+    const updated = await Restaurant.findByIdAndUpdate(
+      restaurantId,
+      { name, address },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false });
+    }
+
+    res.json({ success: true, restaurant: updated });
+
+  } catch (err) {
+    console.error("Restaurant update error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 module.exports = router;
