@@ -19,5 +19,10 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", UserSchema);
-
+/*
+  🔥 Prevent OverwriteModelError
+  If model already exists (Render hot reload / recompile),
+  reuse it instead of redefining.
+*/
+module.exports =
+  mongoose.models.User || mongoose.model("User", UserSchema);
