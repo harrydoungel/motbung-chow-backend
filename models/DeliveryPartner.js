@@ -13,6 +13,16 @@ const deliveryPartnerSchema = new mongoose.Schema(
       unique: true,
     },
 
+    address: {
+      type: String,
+      default: "",
+    },
+
+    vehicle: {
+      type: String,
+      default: "",
+    },
+
     razorpayAccountId: {
       type: String,
       default: "",
