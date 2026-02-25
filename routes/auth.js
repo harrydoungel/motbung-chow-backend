@@ -115,6 +115,46 @@ router.post("/phone-login", async (req, res) => {
   }
 });
 
+const DeliveryPartner = require("../models/DeliveryPartner");
+
+router.post("/driver-login", async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const phoneNumber = decoded.phone_number;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ success: false });
+    }
+
+    let driver = await DeliveryPartner.findOne({ phone: phoneNumber });
+
+    if (!driver) {
+      driver = await DeliveryPartner.create({
+        name: "Delivery " + phoneNumber.slice(-4),
+        phone: phoneNumber,
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: decoded.uid,
+        role: "driver",
+        driverId: driver._id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, token, driver });
+
+  } catch (err) {
+    console.error("Driver login error:", err);
+    res.status(401).json({ success: false });
+  }
+});
+
 /* ============================================
    HEALTH CHECK
 ============================================ */
