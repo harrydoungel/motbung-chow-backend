@@ -68,9 +68,9 @@ router.post("/phone-login", async (req, res) => {
       const count = await Restaurant.countDocuments();
 
       restaurant = await Restaurant.create({
-        name: "New Restaurant",
+        name: "Restaurant " + phoneNumber.slice(-4),
         phone: phoneNumber,
-        location: "",
+        Address: "",
         restaurantCode: "MC" + (count + 1),
       });
 
