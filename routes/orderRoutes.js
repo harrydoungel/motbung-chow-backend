@@ -290,4 +290,28 @@ router.get("/restaurant", auth, async (req, res) => {
   }
 });
 
+router.get("/by-restaurant/:id", async (req, res) => {
+  try {
+    const restaurantId = req.params.id;
+
+    const orders = await Order.find({ restaurantId })
+      .sort({ createdAt: -1 });
+
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + (order.totalAmount || 0),
+      0
+    );
+
+    res.json({
+      success: true,
+      totalOrders: orders.length,
+      totalRevenue,
+      orders
+    });
+
+  } catch (err) {
+    console.error("Restaurant orders error:", err);
+    res.status(500).json({ success: false });
+  }
+});
 module.exports = router;
