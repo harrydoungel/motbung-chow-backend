@@ -155,6 +155,28 @@ router.post("/driver-login", async (req, res) => {
   }
 });
 
+router.put("/driver-update", async (req, res) => {
+  try {
+    const { phone, name, address, vehicle } = req.body;
+
+    const driver = await DeliveryPartner.findOneAndUpdate(
+      { phone },
+      { name, address, vehicle },
+      { new: true }
+    );
+
+    if (!driver) {
+      return res.status(404).json({ success: false });
+    }
+
+    res.json({ success: true, driver });
+
+  } catch (err) {
+    console.error("Driver update error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 /* ============================================
    HEALTH CHECK
 ============================================ */
