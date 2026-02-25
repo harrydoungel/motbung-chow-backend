@@ -72,18 +72,6 @@ mongoose.connect(process.env.MONGO_URI)
   });
 
 /* =======================
-   MODELS
-======================= */
-const userSchema = new mongoose.Schema({
-  phone: { type: String, unique: true },
-  name: String,
-  address: String,
-  lastLogin: Date,
-}, { timestamps: true });
-
-const User = mongoose.model("User", userSchema);
-
-/* =======================
    OTP SYSTEM
 ======================= */
 const otpStore = new Map();
