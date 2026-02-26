@@ -212,7 +212,7 @@ router.put("/driver-update", async (req, res) => {
 });
 
 const User = require("../models/User");
-const auth = require("../middleware/auth"); // your JWT middleware
+const auth = require("../middleware/authMiddleware"); // your JWT middleware
 
 // SECURE CUSTOMER UPDATE
 router.put("/update", auth, async (req, res) => {
