@@ -4,6 +4,7 @@ const router = express.Router();
 
 const admin = require("firebase-admin");
 const Restaurant = require("../models/Restaurant");
+const auth = require("../middleware/authMiddleware"); // your JWT middleware
 
 /* ============================================
    SAFE FIREBASE ADMIN INIT
@@ -40,12 +41,52 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
-    if (!admin.apps.length) {
-      return res.status(500).json({
+    // 🔹 Verify Firebase token
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const phoneNumber = decoded.phone_number;
+
+    if (!phoneNumber) {
+      return res.status(400).json({
         success: false,
-        message: "Firebase not initialized on server",
+        message: "Phone number missing",
       });
     }
+
+    // 🔹 Find or create USER (NOT restaurant)
+    let user = await User.findOne({ phone: phoneNumber });
+
+    if (!user) {
+      user = await User.create({
+        phone: phoneNumber,
+        name: "",
+        address: ""
+      });
+    }
+
+    // 🔹 Create JWT using MongoDB user._id
+    const sessionToken = jwt.sign(
+      {
+        id: user._id,
+        phone: phoneNumber,
+        role: "customer"
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      success: true,
+      token: sessionToken
+    });
+
+  } catch (err) {
+    console.error("Customer login failed:", err);
+    return res.status(401).json({
+      success: false,
+      message: "Authentication failed"
+    });
+  }
+});
 
     /* ========= VERIFY FIREBASE TOKEN ========= */
     const decoded = await admin.auth().verifyIdToken(idToken);
@@ -211,8 +252,6 @@ router.put("/driver-update", async (req, res) => {
   }
 });
 
-const User = require("../models/User");
-const auth = require("../middleware/authMiddleware"); // your JWT middleware
 
 // SECURE CUSTOMER UPDATE
 router.put("/update", auth, async (req, res) => {
