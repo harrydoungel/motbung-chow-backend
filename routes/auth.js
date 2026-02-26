@@ -140,8 +140,8 @@ router.put("/update", auth, async (req, res) => {
   try {
     const { name, address } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,  // comes from JWT middleware
+    const updatedUser = await User.findOneAndUpdate(
+      { phone: req.user.phone },
       { name, address },
       { new: true }
     );
