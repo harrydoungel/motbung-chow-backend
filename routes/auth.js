@@ -128,8 +128,6 @@ router.post("/driver-login", async (req, res) => {
       return res.status(400).json({ success: false });
     }
 
-const express = require("express");
-const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const User = require("../models/User");
 const userRoutes = require("./routes/userRoutes");
@@ -213,8 +211,6 @@ router.put("/driver-update", async (req, res) => {
   }
 });
 
-const express = require("express");
-const router = express.Router();
 const User = require("../models/User");
 const auth = require("../middleware/auth"); // your JWT middleware
 
