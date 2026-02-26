@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 const admin = require("firebase-admin");
-
+const Restaurant = require("../models/Restaurant");
 const User = require("../models/User");
 const DeliveryPartner = require("../models/DeliveryPartner");
 const auth = require("../middleware/authMiddleware");
@@ -157,20 +157,24 @@ router.post("/restaurant-login", async (req, res) => {
     }
 
     const decoded = await admin.auth().verifyIdToken(idToken);
-    const firebaseUid = decoded.uid;
+    const phoneNumber = decoded.phone_number;
 
-    const restaurant = await Restaurant.findOne({ ownerUserId: firebaseUid });
+    if (!phoneNumber) {
+      return res.status(400).json({ success: false, message: "Phone number not found" });
+    }
+
+    const restaurant = await Restaurant.findOne({ phone: phoneNumber });
 
     if (!restaurant) {
       return res.status(404).json({
         success: false,
-        message: "Restaurant not found. Please sign up first."
+        message: "Restaurant not registered"
       });
     }
 
     const token = jwt.sign(
       {
-        id: firebaseUid,
+        id: restaurant._id,
         role: "restaurant",
         restaurantId: restaurant._id
       },
