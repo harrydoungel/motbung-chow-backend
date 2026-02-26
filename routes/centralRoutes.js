@@ -6,7 +6,7 @@ const Restaurant = require("../models/Restaurant");
 const DeliveryPartner = require("../models/DeliveryPartner");
 
 // Get existing compiled User model safely
-const User = mongoose.models.User;
+const User = require("../models/User");
 
 // GET ALL RESTAURANTS
 router.get("/restaurants", async (req, res) => {
