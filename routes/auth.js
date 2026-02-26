@@ -213,6 +213,35 @@ router.put("/driver-update", async (req, res) => {
   }
 });
 
+const express = require("express");
+const router = express.Router();
+const User = require("../models/User");
+const auth = require("../middleware/auth"); // your JWT middleware
+
+// SECURE CUSTOMER UPDATE
+router.put("/update", auth, async (req, res) => {
+  try {
+    const { name, address } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { name, address },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user: updatedUser });
+
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+module.exports = router;
 /* ============================================
    HEALTH CHECK
 ============================================ */
