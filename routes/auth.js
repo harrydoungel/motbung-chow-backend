@@ -91,6 +91,21 @@ router.put("/update", auth, async (req, res) => {
   }
 });
 
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false });
+    }
+
+    res.json({ success: true, user });
+
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 /* ===============================
    DRIVER LOGIN
 =============================== */
