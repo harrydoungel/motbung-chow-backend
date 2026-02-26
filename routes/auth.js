@@ -4,9 +4,6 @@ const router = express.Router();
 
 const admin = require("firebase-admin");
 const Restaurant = require("../models/Restaurant");
-const DeliveryPartner = require("../models/DeliveryPartner");
-const User = require("../models/User");
-const authMiddleware = require("../middleware/authMiddleware");
 
 /* ============================================
    SAFE FIREBASE ADMIN INIT
@@ -30,7 +27,7 @@ try {
 }
 
 /* ============================================
-   PHONE LOGIN → CREATE USER + RESTAURANT → JWT
+   PHONE LOGIN → CREATE / FIX RESTAURANT → JWT
 ============================================ */
 router.post("/phone-login", async (req, res) => {
   try {
@@ -43,7 +40,17 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
+    if (!admin.apps.length) {
+      return res.status(500).json({
+        success: false,
+        message: "Firebase not initialized on server",
+      });
+    }
+
+    /* ========= VERIFY FIREBASE TOKEN ========= */
     const decoded = await admin.auth().verifyIdToken(idToken);
+
+    const uid = decoded.uid;
     const phoneNumber = decoded.phone_number;
 
     if (!phoneNumber) {
@@ -53,20 +60,10 @@ router.post("/phone-login", async (req, res) => {
       });
     }
 
-    /* ========= CREATE OR FIND USER ========= */
-    let user = await User.findOne({ phone: phoneNumber });
-
-    if (!user) {
-      user = await User.create({
-        name: "",
-        phone: phoneNumber,
-        address: "",
-      });
-    }
-
-    /* ========= CREATE OR FIND RESTAURANT ========= */
+    /* ========= FIND EXISTING RESTAURANT ========= */
     let restaurant = await Restaurant.findOne({ phone: phoneNumber });
 
+    /* ========= CREATE NEW RESTAURANT ========= */
     if (!restaurant) {
       const count = await Restaurant.countDocuments();
 
@@ -80,19 +77,23 @@ router.post("/phone-login", async (req, res) => {
       console.log("🏪 Restaurant auto-created:", restaurant.restaurantCode);
     }
 
+    /* ========= FIX OLD RESTAURANTS WITHOUT CODE ========= */
     if (!restaurant.restaurantCode) {
       const count = await Restaurant.countDocuments();
+
       restaurant.restaurantCode = "MC" + count;
       await restaurant.save();
+
+      console.log("🔧 Added missing restaurantCode:", restaurant.restaurantCode);
     }
 
-    /* ========= SIGN JWT WITH MONGODB USER ID ========= */
+    /* ========= CREATE SESSION JWT ========= */
     const sessionToken = jwt.sign(
       {
-        id: user._id,  // ✅ FIXED (was Firebase uid before)
+        id: uid,
         phone: phoneNumber,
         restaurantId: restaurant._id,
-        restaurantCode: restaurant.restaurantCode,
+        restaurantCode: restaurant.restaurantCode, // ✅ USE CODE (NOT _id)
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -106,6 +107,7 @@ router.post("/phone-login", async (req, res) => {
 
   } catch (err) {
     console.error("❌ LOGIN FAILED:", err);
+
     return res.status(401).json({
       success: false,
       message: "Authentication failed",
@@ -113,49 +115,8 @@ router.post("/phone-login", async (req, res) => {
   }
 });
 
-/* ============================================
-   GET CURRENT USER (CUSTOMER)
-============================================ */
-router.get("/me", authMiddleware, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ success: false });
+const DeliveryPartner = require("../models/DeliveryPartner");
 
-    res.json({ success: true, user });
-  } catch (err) {
-    console.error("User fetch error:", err);
-    res.status(500).json({ success: false });
-  }
-});
-
-/* ============================================
-   UPDATE CUSTOMER ACCOUNT
-============================================ */
-router.put("/update", authMiddleware, async (req, res) => {
-  try {
-    const { name, address } = req.body;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { name, address },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ success: false });
-    }
-
-    res.json({ success: true, user: updatedUser });
-
-  } catch (err) {
-    console.error("User update error:", err);
-    res.status(500).json({ success: false });
-  }
-});
-
-/* ============================================
-   DRIVER LOGIN
-============================================ */
 router.post("/driver-login", async (req, res) => {
   try {
     const { idToken } = req.body;
@@ -166,6 +127,41 @@ router.post("/driver-login", async (req, res) => {
     if (!phoneNumber) {
       return res.status(400).json({ success: false });
     }
+
+const express = require("express");
+const router = express.Router();
+const auth = require("../middleware/authMiddleware");
+const User = require("../models/User");
+const userRoutes = require("./routes/userRoutes");
+/* =========================
+   UPDATE CUSTOMER ACCOUNT
+========================= */
+router.put("/update", auth, async (req, res) => {
+  try {
+    const { name, address } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,  // comes from JWT middleware
+      { name, address },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false });
+    }
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+
+  } catch (err) {
+    console.error("User update error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+module.exports = router;
 
     let driver = await DeliveryPartner.findOne({ phone: phoneNumber });
 
@@ -178,7 +174,7 @@ router.post("/driver-login", async (req, res) => {
 
     const token = jwt.sign(
       {
-        id: driver._id,
+        id: decoded.uid,
         role: "driver",
         driverId: driver._id,
       },
@@ -194,9 +190,6 @@ router.post("/driver-login", async (req, res) => {
   }
 });
 
-/* ============================================
-   DRIVER UPDATE
-============================================ */
 router.put("/driver-update", async (req, res) => {
   try {
     const { phone, name, address, vehicle } = req.body;
@@ -227,3 +220,7 @@ router.get("/health", (req, res) => {
 });
 
 module.exports = router;
+ 
+
+
+
