@@ -133,6 +133,7 @@ const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const User = require("../models/User");
 const userRoutes = require("./routes/userRoutes");
+
 /* =========================
    UPDATE CUSTOMER ACCOUNT
 ========================= */
@@ -140,8 +141,8 @@ router.put("/update", auth, async (req, res) => {
   try {
     const { name, address } = req.body;
 
-    const updatedUser = await User.findOneAndUpdate(
-      { phone: req.user.phone },
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,  // comes from JWT middleware
       { name, address },
       { new: true }
     );
