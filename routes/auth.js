@@ -145,6 +145,51 @@ router.post("/driver-login", async (req, res) => {
     res.status(401).json({ success: false });
   }
 });
+/* ===============================
+     RESTAURENT LOGIN
+=============================== */
+router.post("/restaurant-login", async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ success: false, message: "No token provided" });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const firebaseUid = decoded.uid;
+
+    const restaurant = await Restaurant.findOne({ ownerUserId: firebaseUid });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found. Please sign up first."
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: firebaseUid,
+        role: "restaurant",
+        restaurantId: restaurant._id
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      token,
+      restaurantId: restaurant._id,
+      restaurant
+    });
+
+  } catch (err) {
+    console.error("Restaurant login error:", err);
+    res.status(401).json({ success: false, message: "Invalid token" });
+  }
+});
 
 /* ===============================
    HEALTH
