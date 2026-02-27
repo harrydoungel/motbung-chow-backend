@@ -163,13 +163,17 @@ router.post("/restaurant-login", async (req, res) => {
       return res.status(400).json({ success: false, message: "Phone number not found" });
     }
 
-    const restaurant = await Restaurant.findOne({ phone: phoneNumber });
+    // 🔥 LOGIN OR REGISTER LOGIC
+    let restaurant = await Restaurant.findOne({ phone: phoneNumber });
 
     if (!restaurant) {
-      return res.status(404).json({
-        success: false,
-        message: "Restaurant not registered"
+      restaurant = await Restaurant.create({
+        phone: phoneNumber,
+        name: "",
+        isActive: true
       });
+
+      console.log("New restaurant created:", restaurant._id);
     }
 
     const token = jwt.sign(
@@ -194,7 +198,6 @@ router.post("/restaurant-login", async (req, res) => {
     res.status(401).json({ success: false, message: "Invalid token" });
   }
 });
-
 /* ===============================
    HEALTH
 =============================== */
