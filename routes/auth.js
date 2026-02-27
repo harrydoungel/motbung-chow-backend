@@ -198,6 +198,7 @@ router.post("/restaurant-login", async (req, res) => {
     res.status(401).json({ success: false, message: "Invalid token" });
   }
 });
+
 /* ===============================
    HEALTH
 =============================== */

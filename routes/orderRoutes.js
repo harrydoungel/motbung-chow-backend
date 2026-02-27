@@ -108,7 +108,7 @@ router.post("/create-order", auth, async (req, res) => {
       totalAmount,
       location,
       mapLink: mapLink || "",
-      restaurantCode: restaurantId,
+      restaurantId: restaurantId,
       razorpayOrderId: razorpayOrder.id,
       status: "PENDING",
     });
@@ -265,18 +265,17 @@ router.get("/my-orders", auth, async (req, res) => {
 ======================= */
 router.get("/restaurant", auth, async (req, res) => {
   try {
-    const restaurantCode = req.user.restaurantCode;
+    const restaurantId = req.user.restaurantId;
 
-    if (!restaurantCode) {
+    if (!restaurantId) {
       return res.status(403).json({
         success: false,
         message: "Restaurant access only",
       });
     }
 
-    // ✅ Only show confirmed orders to restaurant admin
     const orders = await Order.find({
-      restaurantCode,
+      restaurantId,
       status: "CONFIRMED"
     }).sort({ createdAt: -1 });
 
