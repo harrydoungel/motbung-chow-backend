@@ -18,11 +18,6 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    restaurantCode: {
-      type: String,
-      unique: true,
-    },
-
     // 🔥 IMPORTANT FOR SPLIT
     razorpayAccountId: {
       type: String,
