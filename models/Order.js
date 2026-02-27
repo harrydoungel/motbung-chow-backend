@@ -67,8 +67,9 @@ const orderSchema = new mongoose.Schema(
        RELATIONS
     ========================== */
 
-    restaurantCode: {
-      type: String,
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
       required: true,
       index: true,
     },

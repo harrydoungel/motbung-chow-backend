@@ -24,44 +24,6 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 /* =====================================================
-   1️⃣ CUSTOMER: GET MENU BY RESTAURANT CODE (MC1)
-===================================================== */
-router.get("/code/:restaurantCode", async (req, res) => {
-  try {
-    const { restaurantCode } = req.params;
-
-    const restaurant = await Restaurant.findOne({
-      restaurantCode: restaurantCode,
-    });
-
-    if (!restaurant) {
-      return res.status(404).json({
-        success: false,
-        message: "Restaurant not found",
-      });
-    }
-
-    const items = await Menu.find({
-      restaurantId: restaurant._id,
-      available: true,
-    }).sort({ createdAt: -1 });
-
-    res.json({
-      success: true,
-      restaurantId: restaurant._id,
-      items,
-    });
-
-  } catch (err) {
-    console.error("❌ Customer menu fetch error:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-/* =====================================================
    2️⃣ ADMIN: GET MENU BY RESTAURANT ID
 ===================================================== */
 router.get("/:restaurantId", async (req, res) => {
@@ -77,6 +39,7 @@ router.get("/:restaurantId", async (req, res) => {
 
     const items = await Menu.find({
       restaurantId: restaurantId,
+      available: true,   // ✅ only visible items
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -85,7 +48,7 @@ router.get("/:restaurantId", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Admin menu fetch error:", err);
+    console.error("❌ Menu fetch error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
