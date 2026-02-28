@@ -220,6 +220,7 @@ router.get("/restaurant/profile", auth, async (req, res) => {
     res.json({
       name: restaurant.name,
       phone: restaurant.phone,
+      restaurant: restaurant.name, 
       location: restaurant.address || ""
     });
 
