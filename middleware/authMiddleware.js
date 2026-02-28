@@ -42,6 +42,7 @@ module.exports = function (req, res, next) {
       id: decoded.id,                // ← string
       phone: decoded.phone,
       restaurantId: decoded.restaurantId,
+      role: decoded.role, 
     };
 
     console.log("✅ Request user set:", req.user);
