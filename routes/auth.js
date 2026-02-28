@@ -199,6 +199,64 @@ router.post("/restaurant-login", async (req, res) => {
   }
 });
 
+
+/* ===============================
+   RESTAURANT PROFILE
+=============================== */
+
+// GET restaurant profile
+router.get("/restaurant/profile", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "restaurant") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const restaurant = await Restaurant.findById(req.user.id);
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    res.json({
+      name: restaurant.name,
+      phone: restaurant.phone,
+      location: restaurant.address || ""
+    });
+
+  } catch (err) {
+    console.error("Profile fetch error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// UPDATE restaurant profile
+router.put("/restaurant/profile", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "restaurant") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { name, location } = req.body;
+
+    const restaurant = await Restaurant.findById(req.user.id);
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    restaurant.name = name;
+     restaurant.address = location;
+
+    await restaurant.save();
+
+    res.json({ message: "Profile updated" });
+
+  } catch (err) {
+    console.error("Profile update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 /* ===============================
    HEALTH
 =============================== */
