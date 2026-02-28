@@ -218,9 +218,9 @@ router.get("/restaurant/profile", auth, async (req, res) => {
     }
 
     res.json({
-      name: restaurant.name,
-      phone: restaurant.phone,
-      restaurant: restaurant.name, 
+      ownerName: restaurant.ownerName || "",
+      restaurant: restaurant.name || "",
+      phone: restaurant.phone || "",
       location: restaurant.address || ""
     });
 
@@ -237,18 +237,19 @@ router.put("/restaurant/profile", auth, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { name, location } = req.body;
+    const { ownerName, restaurant, location } = req.body;
 
-    const restaurant = await Restaurant.findById(req.user.id);
+    const restaurantDoc = await Restaurant.findById(req.user.id);
 
-    if (!restaurant) {
+    if (!restaurantDoc) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    restaurant.name = name;
-     restaurant.address = location;
+    restaurantDoc.ownerName = ownerName;   // owner name
+    restaurantDoc.name = restaurant;       // restaurant name
+    restaurantDoc.address = location;      // location
 
-    await restaurant.save();
+    await restaurantDoc.save();
 
     res.json({ message: "Profile updated" });
 

@@ -2,7 +2,12 @@ const mongoose = require("mongoose");
 
 const restaurantSchema = new mongoose.Schema(
   {
-    name: {
+    name: {            // restaurant name
+      type: String,
+      default: "",
+    },
+
+    ownerName: {       // 🔥 NEW FIELD
       type: String,
       default: "",
     },
@@ -18,7 +23,6 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    // 🔥 IMPORTANT FOR SPLIT
     razorpayAccountId: {
       type: String,
       default: "",
