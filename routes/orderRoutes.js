@@ -303,14 +303,18 @@ router.get("/by-restaurant/:id", async (req, res) => {
       status: "CONFIRMED"
     }).sort({ createdAt: -1 });
 
-    const totalRevenue = orders.reduce(
-      (sum, order) => sum + (order.totalAmount || 0),
-      0
-    );
+    const totalOrders = orders.length;
+
+    const totalRevenue = orders.reduce((sum, order) => {
+      const itemsTotal = order.itemsTotal || 0;
+      const platformFee = itemsTotal * 0.10;
+      const finalEarning = itemsTotal - platformFee;
+      return sum + finalEarning;
+    }, 0);
 
     res.json({
       success: true,
-      totalOrders: orders.length,
+      totalOrders,
       totalRevenue,
       orders
     });
@@ -320,7 +324,6 @@ router.get("/by-restaurant/:id", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 // ==============================
 // CUSTOMER ANALYTICS
 // ==============================
