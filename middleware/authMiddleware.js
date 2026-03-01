@@ -35,11 +35,14 @@ module.exports = function (req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("✅ JWT verified");
 
+    // ⭐ IMPORTANT FIX:
+    // Do NOT convert user ID to Mongo ObjectId
+    // Keep it as STRING (Firebase/custom ID)
     req.user = {
-      id: new mongoose.Types.ObjectId(decoded.id),
+      id: decoded.id,                // ← string
       phone: decoded.phone,
       restaurantId: decoded.restaurantId,
-      role: decoded.role,
+      role: decoded.role, 
     };
 
     console.log("✅ Request user set:", req.user);
