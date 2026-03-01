@@ -296,16 +296,11 @@ router.get("/restaurant", auth, async (req, res) => {
 router.get("/by-restaurant/:id", async (req, res) => {
   try {
 
-    // Step 1: Find restaurant
-    const restaurant = await Restaurant.findById(req.params.id);
+    const restaurantId = req.params.id;
 
-    if (!restaurant) {
-      return res.json({ success: false });
-    }
-
-    // Step 2: Find orders by restaurantCode
     const orders = await Order.find({
-      restaurantCode: restaurant.restaurantCode
+      restaurantId: restaurantId,
+      status: "CONFIRMED"
     }).sort({ createdAt: -1 });
 
     const totalRevenue = orders.reduce(
@@ -325,7 +320,6 @@ router.get("/by-restaurant/:id", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 // ==============================
 // CUSTOMER ANALYTICS
@@ -355,7 +349,6 @@ router.get("/by-customer/:id", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 // ==============================
 // DRIVER ANALYTICS
