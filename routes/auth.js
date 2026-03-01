@@ -52,10 +52,11 @@ router.post("/phone-login", async (req, res) => {
     const token = jwt.sign(
       {
         id: user._id,
+        phone: user.phone,
         role: "customer"
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "90d" }
     );
 
     res.json({ success: true, token });
