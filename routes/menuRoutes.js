@@ -39,7 +39,6 @@ router.get("/:restaurantId", async (req, res) => {
 
     const items = await Menu.find({
       restaurantId: restaurantId,
-      available: true,   // ✅ only visible items
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -49,6 +48,39 @@ router.get("/:restaurantId", async (req, res) => {
 
   } catch (err) {
     console.error("❌ Menu fetch error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+/* =====================================================
+   PUBLIC: GET ONLY AVAILABLE ITEMS (CUSTOMER SIDE)
+===================================================== */
+router.get("/public/:restaurantId", async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid restaurant ID",
+      });
+    }
+
+    const items = await Menu.find({
+      restaurantId: restaurantId,
+      available: true,   // ✅ filter ONLY for customers
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      items,
+    });
+
+  } catch (err) {
+    console.error("❌ Public menu fetch error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
