@@ -24,7 +24,34 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 /* =====================================================
-   2️⃣ ADMIN: GET MENU BY RESTAURANT ID
+   PUBLIC: GET ONLY AVAILABLE ITEMS (CUSTOMER SIDE)
+===================================================== */
+router.get("/public/:restaurantId", async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid restaurant ID",
+      });
+    }
+
+    const items = await Menu.find({
+      restaurantId: restaurantId,
+      available: true,
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, items });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+/* =====================================================
+   ADMIN: GET MENU BY RESTAURANT ID
 ===================================================== */
 router.get("/:restaurantId", async (req, res) => {
   try {
@@ -41,50 +68,10 @@ router.get("/:restaurantId", async (req, res) => {
       restaurantId: restaurantId,
     }).sort({ createdAt: -1 });
 
-    res.json({
-      success: true,
-      items,
-    });
+    res.json({ success: true, items });
 
   } catch (err) {
-    console.error("❌ Menu fetch error:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-/* =====================================================
-   PUBLIC: GET ONLY AVAILABLE ITEMS (CUSTOMER SIDE)
-===================================================== */
-router.get("/public/:restaurantId", async (req, res) => {
-  try {
-    const { restaurantId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid restaurant ID",
-      });
-    }
-
-    const items = await Menu.find({
-      restaurantId: restaurantId,
-      available: true,   // ✅ filter ONLY for customers
-    }).sort({ createdAt: -1 });
-
-    res.json({
-      success: true,
-      items,
-    });
-
-  } catch (err) {
-    console.error("❌ Public menu fetch error:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
