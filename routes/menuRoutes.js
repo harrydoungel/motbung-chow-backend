@@ -142,13 +142,19 @@ router.patch("/:id/toggle", async (req, res) => {
       });
     }
 
-    item.available = !item.available;
-    await item.save();
+  item.available = !item.available;
+  await item.save();
 
-    res.json({
-      success: true,
-      available: item.available,
-    });
+  const io = req.app.get("io");
+
+  io.emit("menuUpdated", {
+    restaurantId: item.restaurantId.toString()
+  });
+
+  res.json({
+    success: true,
+    available: item.available,
+  });
 
   } catch (err) {
     console.error("❌ Toggle availability error:", err);
