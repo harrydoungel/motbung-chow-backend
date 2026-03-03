@@ -53,7 +53,7 @@ router.get("/public/:restaurantId", async (req, res) => {
 /* =====================================================
    ADMIN: GET MENU BY RESTAURANT ID
 ===================================================== */
-router.get("/:restaurantId", async (req, res) => {
+router.get("/:restaurantId", auth, async (req, res) => {
   try {
     const { restaurantId } = req.params;
 
