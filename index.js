@@ -288,10 +288,32 @@ app.post("/api/auth/direct-login", (req, res) => {
 /* =======================
    START SERVER
 ======================= */
-app.listen(PORT, () => {
+const http = require("http");
+const { Server } = require("socket.io");
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "https://hygo-59a87.web.app",
+      "https://hygo-59a87.firebaseapp.com"
+    ],
+    methods: ["GET", "POST"]
+  }
+});
+
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("⚡ Client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("❌ Client disconnected:", socket.id);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`🔐 JWT Secret configured: ${!!process.env.JWT_SECRET}`);
-  console.log(`   - POST http://localhost:${PORT}/api/auth/login`);
-  console.log(`   - GET  http://localhost:${PORT}/health`);
-  console.log(`   - GET  http://localhost:${PORT}/api/debug/auth-test`);
 });
