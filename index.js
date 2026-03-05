@@ -55,7 +55,8 @@ app.use(cors({
     "https://hygo-user.web.app",
     "https://hygo-admin.web.app",
     "https://hygo-delivery.web.app",
-    "https://hygo-control.web.app"
+    "https://hygo-control.web.app",
+    "https://hygo-59a87.web.app"
   ],
   methods: ["GET","POST","PUT","DELETE","PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -300,7 +301,8 @@ const io = new Server(server, {
       "https://hygo-user.web.app",
       "https://hygo-admin.web.app",
       "https://hygo-delivery.web.app",
-      "https://hygo-control.web.app"
+      "https://hygo-control.web.app",
+      "https://hygo-59a87.web.app"
     ],
     methods: ["GET","POST"]
   }
