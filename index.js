@@ -52,14 +52,15 @@ requiredEnvVars.forEach(v => {
 ======================= */
 app.use(cors({
   origin: [
-    "https://hygo-59a87.web.app",
-    "https://hygo-59a87.firebaseapp.com"
+    "https://hygo-user.web.app",
+    "https://hygo-admin.web.app",
+    "https://hygo-delivery.web.app",
+    "https://hygo-control.web.app"
   ],
   methods: ["GET","POST","PUT","DELETE","PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
-
 
 /* =======================
    DATABASE
@@ -296,10 +297,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "https://hygo-59a87.web.app",
-      "https://hygo-59a87.firebaseapp.com"
+      "https://hygo-user.web.app",
+      "https://hygo-admin.web.app",
+      "https://hygo-delivery.web.app",
+      "https://hygo-control.web.app"
     ],
-    methods: ["GET", "POST"]
+    methods: ["GET","POST"]
   }
 });
 
