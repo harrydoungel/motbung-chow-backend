@@ -288,6 +288,17 @@ app.post("/api/auth/direct-login", (req, res) => {
 });
 
 /* =======================
+   GLOBAL PROCESS ERROR HANDLING
+======================= */
+
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("💥 Unhandled Promise Rejection:", reason);
+});
+/* =======================
    START SERVER
 ======================= */
 const http = require("http");
@@ -315,6 +326,16 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected:", socket.id);
+  });
+});
+
+// GLOBAL ERROR HANDLER
+app.use((err, req, res, next) => {
+  console.error("🔥 SERVER ERROR:", err.stack);
+
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error"
   });
 });
 
