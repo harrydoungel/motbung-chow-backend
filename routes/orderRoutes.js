@@ -1,3 +1,4 @@
+const sendNotification = require("../services/sendNotification");
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
@@ -156,13 +157,27 @@ router.post("/verify-payment", auth, async (req, res) => {
     }
 
     // ✅ Only mark as CONFIRMED after payment success
-    await Order.findOneAndUpdate(
+    const order = await Order.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id },
       {
         status: "CONFIRMED",
         razorpayPaymentId: razorpay_payment_id,
-      }
+      },
+      { new: true }
     );
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("orderUpdated", order);
+    }
+
+    if (order && order.fcmToken) {
+      sendNotification(
+        order.fcmToken,
+        "Order Confirmed",
+        "Your order has been confirmed!",
+        "/?tab=orders"
+      );
+    }
 
     res.json({ success: true });
 
@@ -212,6 +227,19 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
         },
         { new: true }
       );
+      const io = req.app.get("io");
+      if (io) {
+        io.emit("orderUpdated", updated);
+      }
+
+      if (updated && updated.fcmToken) {
+        sendNotification(
+          updated.fcmToken,
+          "Order Confirmed",
+          "Your order has been confirmed!",
+          "/?tab=orders"
+        );
+      }
 
       console.log("✅ Webhook confirmed order:", razorpayOrderId);
     }
