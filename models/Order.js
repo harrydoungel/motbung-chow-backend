@@ -125,4 +125,10 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+paymentStatus: {
+  type: String,
+  enum: ["pending","paid"],
+  default: "pending"
+},
+
 module.exports = mongoose.model("Order", orderSchema);
