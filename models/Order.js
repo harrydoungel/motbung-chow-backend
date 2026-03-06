@@ -108,7 +108,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["PENDING", "CONFIRMED", "FAILED"],
       default: "PENDING",
     },
-
+    paymentStatus: {
+      type: String,
+      enum: ["pending","paid"],
+      default: "pending"
+    },
     /* =========================
        ITEMS
     ========================== */
@@ -124,11 +128,5 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-paymentStatus: {
-  type: String,
-  enum: ["pending","paid"],
-  default: "pending"
-},
 
 module.exports = mongoose.model("Order", orderSchema);
