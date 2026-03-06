@@ -409,7 +409,6 @@ router.post("/mark-paid/:restaurantId", async (req,res)=>{
       {
         restaurantId: restaurantId,
         status: "CONFIRMED",
-        paymentStatus: "pending"
       },
       {
         $set: { paymentStatus: "paid" }
