@@ -305,17 +305,32 @@ router.get("/by-restaurant/:id", async (req, res) => {
 
     const totalOrders = orders.length;
 
-    const totalRevenue = orders.reduce((sum, order) => {
+    let totalRevenue = 0;
+    let paidRevenue = 0;
+    let pendingRevenue = 0;
+
+    orders.forEach(order => {
+
       const itemsTotal = order.itemsTotal || 0;
       const platformFee = itemsTotal * 0.10;
       const finalEarning = itemsTotal - platformFee;
-      return sum + finalEarning;
-    }, 0);
+
+      totalRevenue += finalEarning;
+
+      if(order.paymentStatus === "paid"){
+        paidRevenue += finalEarning;
+      } else {
+        pendingRevenue += finalEarning;
+      }
+
+    });
 
     res.json({
       success: true,
       totalOrders,
       totalRevenue,
+      paidRevenue,
+      pendingRevenue,
       orders
     });
 
@@ -378,6 +393,34 @@ router.get("/by-driver/:id", async (req, res) => {
   } catch (err) {
     console.error("Driver analytics error:", err);
     res.status(500).json({ success: false });
+  }
+});
+
+// ==============================
+// MARK RESTAURANT PAYMENTS AS PAID
+// ==============================
+
+router.post("/mark-paid/:restaurantId", async (req,res)=>{
+  try{
+
+    const restaurantId = req.params.restaurantId;
+
+    await Order.updateMany(
+      {
+        restaurantId: restaurantId,
+        status: "CONFIRMED",
+        paymentStatus: "pending"
+      },
+      {
+        $set: { paymentStatus: "paid" }
+      }
+    );
+
+    res.json({success:true});
+
+  }catch(err){
+    console.error("Mark paid error:",err);
+    res.status(500).json({success:false});
   }
 });
 module.exports = router;
