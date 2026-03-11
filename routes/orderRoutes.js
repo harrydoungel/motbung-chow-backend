@@ -427,7 +427,6 @@ router.get("/by-driver/:id", async (req, res) => {
 // ==============================
 // MARK RESTAURANT PAYMENTS AS PAID
 // ==============================
-
 router.post("/mark-paid/:restaurantId", async (req,res)=>{
   try{
 
@@ -443,6 +442,12 @@ router.post("/mark-paid/:restaurantId", async (req,res)=>{
       }
     );
 
+    // 🔔 notify admin panels
+    const io = req.app.get("io");
+    if(io){
+      io.emit("paymentUpdated", { restaurantId });
+    }
+
     res.json({success:true});
 
   }catch(err){
@@ -450,4 +455,5 @@ router.post("/mark-paid/:restaurantId", async (req,res)=>{
     res.status(500).json({success:false});
   }
 });
+
 module.exports = router;
