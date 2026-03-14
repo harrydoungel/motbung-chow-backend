@@ -533,4 +533,24 @@ router.post("/deliver/:orderId", async (req, res) => {
   }
 });
 
+router.get("/single/:orderId", async (req, res) => {
+  try {
+
+    const order = await Order.findOne({ orderId: req.params.orderId });
+
+    if (!order) {
+      return res.json({ success:false });
+    }
+
+    res.json({
+      success:true,
+      order
+    });
+
+  } catch(err){
+    console.error(err);
+    res.status(500).json({ success:false });
+  }
+});
+
 module.exports = router;
