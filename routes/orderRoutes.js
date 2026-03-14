@@ -467,13 +467,13 @@ router.post("/mark-paid/:restaurantId", async (req,res)=>{
 router.post("/start-delivery/:orderId", async (req, res) => {
   try {
 
-    const driverPhone = req.body.driverPhone;
+    const { driverPhone } = req.body;
 
     const order = await Order.findOneAndUpdate(
       { orderId: req.params.orderId },
       {
         status: "OUT_FOR_DELIVERY",
-        deliveryPartnerId: driverPhone
+        deliveryPartnerId: driverPhone   // 🔥 assign driver
       },
       { new: true }
     );
@@ -485,15 +485,6 @@ router.post("/start-delivery/:orderId", async (req, res) => {
     const io = req.app.get("io");
     if (io) {
       io.emit("orderUpdated", order);
-    }
-
-    if (order.fcmToken) {
-      sendNotification(
-        order.fcmToken,
-        "Driver Picked Up Your Order",
-        "🚚 Your food is on the way!",
-        "/?tab=orders"
-      );
     }
 
     res.json({ success: true });
