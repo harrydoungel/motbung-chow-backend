@@ -18,6 +18,7 @@ const orderSchema = new mongoose.Schema(
     orderId: {
       type: String,
       required: true,
+      index: true
     },
 
     /* =========================
@@ -85,9 +86,9 @@ const orderSchema = new mongoose.Schema(
     },
 
     deliveryPartnerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "DeliveryPartner",
+      type: String,
       default: null,
+      index: true
     },
 
     /* =========================
@@ -115,9 +116,17 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["PENDING", "CONFIRMED", "FAILED"],
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+        "FAILED",
+        "CANCELLED"
+      ],
       default: "PENDING",
     },
+
     paymentStatus: {
       type: String,
       enum: ["pending","paid"],
