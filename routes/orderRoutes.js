@@ -281,7 +281,7 @@ router.get("/my-orders", auth, async (req, res) => {
 
     const orders = await Order.find({
       user: userId,
-      status: "CONFIRMED"
+      status: { $in: ["CONFIRMED","OUT_FOR_DELIVERY","DELIVERED"] }
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
@@ -311,7 +311,7 @@ router.get("/restaurant", auth, async (req, res) => {
 
     const orders = await Order.find({
       restaurantId,
-      status: "CONFIRMED"
+      status: { $in: ["CONFIRMED","OUT_FOR_DELIVERY","DELIVERED"] }
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
@@ -335,7 +335,7 @@ router.get("/by-restaurant/:id", async (req, res) => {
 
     const orders = await Order.find({
       restaurantId: restaurantId,
-      status: "CONFIRMED"
+      status: { $in: ["CONFIRMED","OUT_FOR_DELIVERY","DELIVERED"] }
     }).sort({ createdAt: -1 });
 
     const totalOrders = orders.length;
