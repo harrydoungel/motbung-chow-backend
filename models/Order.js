@@ -63,6 +63,16 @@ const orderSchema = new mongoose.Schema(
       default: "",
     },
 
+    phone: {
+      type: String,
+      default: "",
+    },
+
+    address: {
+      type: String,
+      default: "",
+    },
+
     /* =========================
        RELATIONS
     ========================== */
