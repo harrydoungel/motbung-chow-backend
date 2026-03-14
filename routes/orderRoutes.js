@@ -21,10 +21,13 @@ const razorpay = new Razorpay({
 ======================= */
 router.get("/", async (req, res) => {
   try {
-    const orders = await Order.find({ status: "CONFIRMED" })
-      .sort({ createdAt: -1 });
+
+    const orders = await Order.find({
+      status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY"] }
+    }).sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
+
   } catch (err) {
     console.error("Fetch all orders error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -483,6 +486,41 @@ router.post("/start-delivery/:orderId", async (req, res) => {
         order.fcmToken,
         "Driver Picked Up Your Order",
         "🚚 Your food is on the way!",
+        "/?tab=orders"
+      );
+    }
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+router.post("/deliver/:orderId", async (req, res) => {
+  try {
+
+    const order = await Order.findOneAndUpdate(
+      { orderId: req.params.orderId },
+      { status: "DELIVERED" },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.json({ success: false });
+    }
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("orderUpdated", order);
+    }
+
+    if (order.fcmToken) {
+      sendNotification(
+        order.fcmToken,
+        "Order Delivered",
+        "🎉 Your order has been delivered!",
         "/?tab=orders"
       );
     }
