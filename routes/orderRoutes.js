@@ -2,7 +2,7 @@ const sendNotification = require("../services/sendNotification");
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
-
+const mongoose = require("mongoose");
 const auth = require("../middleware/authMiddleware");
 const Order = require("../models/Order");
 const Restaurant = require("../models/Restaurant");
@@ -22,10 +22,24 @@ const razorpay = new Razorpay({
 router.get("/", async (req, res) => {
   try {
 
-    const orders = await Order.find({
-      status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY", "DELIVERED"] }
-    }).sort({ createdAt: -1 });
+const { restaurants } = req.query;
 
+let filter = {
+  status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY"] }
+};
+
+if (restaurants && restaurants !== "ALL") {
+
+  const ids = restaurants
+    .split(",")
+    .map(id => new mongoose.Types.ObjectId(id));
+
+  filter.restaurantId = { $in: ids };
+
+}
+
+const orders = await Order.find(filter)
+.sort({ createdAt: -1 });
     res.json({ success: true, orders });
 
   } catch (err) {
@@ -572,6 +586,25 @@ router.get("/single/:orderId", async (req, res) => {
     console.error(err);
     res.status(500).json({ success:false });
   }
+});
+
+router.get("/restaurants", async (req,res)=>{
+
+  try{
+
+    const restaurants = await Restaurant.find({},{
+      name:1
+    });
+
+    res.json({
+      success:true,
+      restaurants
+    });
+
+  }catch(err){
+    res.status(500).json({success:false});
+  }
+
 });
 
 module.exports = router;
