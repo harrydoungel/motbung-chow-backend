@@ -469,6 +469,14 @@ router.post("/start-delivery/:orderId", async (req, res) => {
 
     const { driverPhone } = req.body;
 
+    // 🔎 Validation
+    if (!driverPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "Driver phone missing"
+      });
+    }
+
     const order = await Order.findOneAndUpdate(
       {
         $or: [
@@ -484,7 +492,10 @@ router.post("/start-delivery/:orderId", async (req, res) => {
     );
 
     if (!order) {
-      return res.json({ success: false });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
     }
 
     const io = req.app.get("io");
@@ -495,8 +506,11 @@ router.post("/start-delivery/:orderId", async (req, res) => {
     res.json({ success: true });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false });
+    console.error("Start delivery error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 });
 
