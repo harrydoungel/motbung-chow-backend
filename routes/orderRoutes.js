@@ -460,4 +460,39 @@ router.post("/mark-paid/:restaurantId", async (req,res)=>{
   }
 });
 
+router.post("/start-delivery/:orderId", async (req, res) => {
+  try {
+
+    const order = await Order.findOneAndUpdate(
+      { orderId: req.params.orderId },
+      { status: "OUT_FOR_DELIVERY" },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.json({ success: false });
+    }
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("orderUpdated", order);
+    }
+
+    if (order.fcmToken) {
+      sendNotification(
+        order.fcmToken,
+        "Driver Picked Up Your Order",
+        "🚚 Your food is on the way!",
+        "/?tab=orders"
+      );
+    }
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
 module.exports = router;
