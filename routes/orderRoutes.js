@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
   try {
 
     const orders = await Order.find({
-      status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY"] }
+      status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY", "DELIVERED"] }
     }).sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
