@@ -410,7 +410,8 @@ router.get("/by-driver/:id", async (req, res) => {
   try {
 
     const orders = await Order.find({
-      deliveryPartnerId: req.params.id
+      deliveryPartnerId: req.params.id,
+      status: "DELIVERED"
     }).sort({ createdAt: -1 });
 
     const totalEarnings = orders.reduce(
@@ -466,9 +467,14 @@ router.post("/mark-paid/:restaurantId", async (req,res)=>{
 router.post("/start-delivery/:orderId", async (req, res) => {
   try {
 
+    const driverPhone = req.body.driverPhone;
+
     const order = await Order.findOneAndUpdate(
       { orderId: req.params.orderId },
-      { status: "OUT_FOR_DELIVERY" },
+      {
+        status: "OUT_FOR_DELIVERY",
+        deliveryPartnerId: driverPhone
+      },
       { new: true }
     );
 
