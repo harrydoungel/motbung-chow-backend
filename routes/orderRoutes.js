@@ -470,10 +470,15 @@ router.post("/start-delivery/:orderId", async (req, res) => {
     const { driverPhone } = req.body;
 
     const order = await Order.findOneAndUpdate(
-      { orderId: req.params.orderId },
+      {
+        $or: [
+          { orderId: req.params.orderId },
+          { razorpayOrderId: req.params.orderId }
+        ]
+      },
       {
         status: "OUT_FOR_DELIVERY",
-        deliveryPartnerId: driverPhone   // 🔥 assign driver
+        deliveryPartnerId: driverPhone
       },
       { new: true }
     );
@@ -499,7 +504,12 @@ router.post("/deliver/:orderId", async (req, res) => {
   try {
 
     const order = await Order.findOneAndUpdate(
-      { orderId: req.params.orderId },
+      {
+        $or: [
+          { orderId: req.params.orderId },
+          { razorpayOrderId: req.params.orderId }
+        ]
+      },
       { status: "DELIVERED" },
       { new: true }
     );
