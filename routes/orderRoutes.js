@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const auth = require("../middleware/authMiddleware");
 const Order = require("../models/Order");
 const Restaurant = require("../models/Restaurant");
+const User = require("../models/User");
 const Razorpay = require("razorpay");
 
 /* =======================
@@ -67,6 +68,13 @@ router.post("/create-order", auth, async (req, res) => {
       tip = 0,
       platformFee = 0,
     } = req.body;
+
+// Save latest user info to profile
+await User.findByIdAndUpdate(userId, {
+  name: customerName,
+  phone: phone,
+  address: location
+});
 
     if (!location || !customerName || !restaurantId) {
       return res.status(400).json({
