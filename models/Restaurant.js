@@ -23,6 +23,16 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
+    openTime: {
+      type: String,
+      default: ""
+    },
+
+    closeTime: {
+      type: String,
+      default: ""
+    },
+
     razorpayAccountId: {
       type: String,
       default: "",
