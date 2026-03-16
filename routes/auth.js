@@ -242,21 +242,27 @@ router.put("/restaurant/profile", auth, async (req, res) => {
 
     const { ownerName, restaurant, location, openTime, closeTime } = req.body;
 
-    const restaurantDoc = await Restaurant.findById(req.user.id);
+    const updated = await Restaurant.findByIdAndUpdate(
+      req.user.id,
+      {
+        ownerName: ownerName,
+        name: restaurant,
+        address: location,
+        openTime: openTime,
+        closeTime: closeTime
+      },
+      { new: true }
+    );
 
-    if (!restaurantDoc) {
+    if (!updated) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    restaurantDoc.ownerName = ownerName;   // owner name
-    restaurantDoc.name = restaurant;       // restaurant name
-    restaurantDoc.address = location;      // location
-    restaurantDoc.openTime = openTime;
-    restaurantDoc.closeTime = closeTime;
-
-    await restaurantDoc.save();
-
-    res.json({ message: "Profile updated" });
+    res.json({
+      message: "Profile updated",
+      openTime: updated.openTime,
+      closeTime: updated.closeTime
+    });
 
   } catch (err) {
     console.error("Profile update error:", err);
