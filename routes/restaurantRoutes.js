@@ -12,7 +12,7 @@ Returns list of all restaurants (for customers)
 router.get("/", async (req, res) => {
   try {
     const restaurants = await Restaurant.find().select(
-      "_id name address open close"
+      "_id name address openTime closeTime"
     );
 
     res.json({
