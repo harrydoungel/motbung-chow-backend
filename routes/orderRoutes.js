@@ -73,7 +73,7 @@ router.post("/create-order", auth, async (req, res) => {
 await User.findByIdAndUpdate(userId, {
   name: customerName,
   phone: phone,
-  address: address
+  address: location
 });
 
     if (!location || !customerName || !restaurantId) {
