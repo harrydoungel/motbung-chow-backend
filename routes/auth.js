@@ -194,10 +194,15 @@ router.post("/restaurant-login", async (req, res) => {
       restaurant
     });
 
-  } catch (err) {
-    console.error("Restaurant login error:", err);
-    res.status(401).json({ success: false, message: "Invalid token" });
-  }
+catch (err) {
+  console.error("🔥 REAL ERROR:", err.code, err.message);
+
+  res.status(401).json({
+    success: false,
+    message: err.message
+  });
+}
+
 });
 
 
