@@ -194,14 +194,14 @@ router.post("/restaurant-login", async (req, res) => {
       restaurant
     });
 
-catch (err) {
-  console.error("🔥 REAL ERROR:", err.code, err.message);
+    }catch (err) {
+      console.error("🔥 REAL ERROR:", err.code, err.message);
 
-  res.status(401).json({
-    success: false,
-    message: err.message
-  });
-}
+      res.status(401).json({
+        success: false,
+        message: err.message
+      });
+    }
 
 });
 
