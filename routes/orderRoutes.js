@@ -73,7 +73,7 @@ router.post("/create-order", auth, async (req, res) => {
 await User.findByIdAndUpdate(userId, {
   name: customerName,
   phone: phone,
-  address: location
+  address: address
 });
 
     if (!location || !customerName || !restaurantId) {
@@ -138,6 +138,8 @@ await User.findByIdAndUpdate(userId, {
       totalAmount,
       location,
       mapLink: mapLink || "",
+      lat: req.body.lat,   
+      lng: req.body.lng,
       restaurantId: restaurantId,
       razorpayOrderId: razorpayOrder.id,
       status: "PENDING",
