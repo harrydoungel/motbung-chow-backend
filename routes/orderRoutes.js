@@ -589,9 +589,15 @@ router.get("/single/:orderId", async (req, res) => {
       return res.json({ success:false });
     }
 
+    // 🔥 FIX: normalize address
+    const fixedOrder = {
+      ...order.toObject(),
+      address: order.address || order.location || "N/A"
+    };
+
     res.json({
-      success:true,
-      order
+      success: true,
+      order: fixedOrder
     });
 
   } catch(err){
