@@ -68,7 +68,6 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 .env
-firebase-service-account.json
 node_modules/
 backend.zip
 
@@ -76,6 +75,5 @@ backend.zip
 .firebase/
 node_modules/
 .env
-firebase-service-account.json
 
 
