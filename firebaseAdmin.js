@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 
-// Load from environment variable instead of file
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// 🔥 Directly use the JSON file (no env, no parsing)
+const serviceAccount = require("./firebase-service-account.json");
 
 if (!admin.apps.length) {
   admin.initializeApp({
