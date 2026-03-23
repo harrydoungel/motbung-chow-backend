@@ -198,7 +198,7 @@ router.post("/verify-payment", auth, async (req, res) => {
     );
     const io = req.app.get("io");
     if (io) {
-      io.emit("newOrder", updated);
+      io.emit("newOrder", order);
       io.emit("orderUpdated", order);
     }
 
