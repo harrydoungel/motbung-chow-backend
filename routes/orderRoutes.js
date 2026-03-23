@@ -147,6 +147,12 @@ await User.findByIdAndUpdate(userId, {
 
     await order.save();
 
+    const io = req.app.get("io");
+
+    if (io && order.restaurantId) {
+      io.to(order.restaurantId.toString()).emit("newOrder", order);
+    }
+
     return res.json({
       success: true,
       razorpayOrderId: razorpayOrder.id,
