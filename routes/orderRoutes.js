@@ -196,9 +196,10 @@ router.post("/verify-payment", auth, async (req, res) => {
       },
       { new: true }
     );
+
     const io = req.app.get("io");
-    if (io) {
-      io.emit("newOrder", order);
+    if (io && order?.restaurantId) {
+      io.to(order.restaurantId.toString()).emit("newOrder", order);
     }
 
     if (order && order.fcmToken) {
@@ -258,9 +259,10 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
         },
         { new: true }
       );
+
       const io = req.app.get("io");
-      if (io) {
-        io.emit("newOrder", updated);
+      if (io && updated?.restaurantId) {
+        io.to(updated.restaurantId.toString()).emit("newOrder", updated);
       }
 
       if (updated && updated.fcmToken) {
@@ -524,7 +526,7 @@ router.post("/start-delivery/:orderId", async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.emit("orderUpdated", order);
+      io.to(order.restaurantId.toString()).emit("orderUpdated", order);
     }
 
     res.json({ success: true });
@@ -558,7 +560,7 @@ router.post("/deliver/:orderId", async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.emit("orderUpdated", order);
+      io.to(order.restaurantId.toString()).emit("orderUpdated", order);
     }
 
     if (order.fcmToken) {
