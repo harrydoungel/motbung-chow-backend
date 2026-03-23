@@ -146,13 +146,6 @@ await User.findByIdAndUpdate(userId, {
     });
 
     await order.save();
-
-    const io = req.app.get("io");
-
-    if (io && order.restaurantId) {
-      io.to(order.restaurantId.toString()).emit("newOrder", order);
-    }
-
     return res.json({
       success: true,
       razorpayOrderId: razorpayOrder.id,
@@ -267,7 +260,7 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
       );
 
       const io = req.app.get("io");
-      if (io && updated?.restaurantId) {
+      if (io && updated?.restaurantId && updated.status === "CONFIRMED") {
         io.to(updated.restaurantId.toString()).emit("newOrder", updated);
       }
 
