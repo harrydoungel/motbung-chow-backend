@@ -324,6 +324,12 @@ app.set("io", io);
 io.on("connection", (socket) => {
   console.log("⚡ Client connected:", socket.id);
 
+  // ✅ JOIN RESTAURANT ROOM
+  socket.on("joinRestaurant", (restaurantId) => {
+    socket.join(restaurantId);
+    console.log("🏪 Admin joined restaurant:", restaurantId);
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected:", socket.id);
   });
