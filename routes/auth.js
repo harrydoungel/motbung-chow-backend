@@ -146,6 +146,59 @@ router.post("/driver-login", async (req, res) => {
     res.status(401).json({ success: false });
   }
 });
+
+/* ===============================
+   DRIVER GET PROFILE
+=============================== */
+router.get("/driver/:phone", async (req, res) => {
+  try {
+
+    const driver = await DeliveryPartner.findOne({
+      phone: req.params.phone
+    });
+
+    res.json({
+      success: true,
+      driver
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+/* ===============================
+   DRIVER UPDATE PROFILE
+=============================== */
+router.put("/driver-update", async (req, res) => {
+  try {
+    const { phone, name, address, vehicle } = req.body;
+
+    const driver = await DeliveryPartner.findOneAndUpdate(
+      { phone: phone },
+      {
+        name,
+        address,
+        vehicle,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!driver) {
+      return res.json({ success: false });
+    }
+
+    res.json({
+      success: true,
+      driver
+    });
+
+  } catch (err) {
+    console.error("Driver update error:", err);
+    res.status(500).json({ success: false });
+  }
+});
 /* ===============================
      RESTAURENT LOGIN
 =============================== */
