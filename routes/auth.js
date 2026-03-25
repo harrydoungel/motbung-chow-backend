@@ -139,7 +139,7 @@ router.post("/driver-login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({ success: true, token });
+    res.json({ success: true, token, driver});
 
   } catch (err) {
     console.error("Driver login error:", err);
