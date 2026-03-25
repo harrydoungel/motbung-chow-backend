@@ -512,6 +512,7 @@ router.post("/start-delivery/:orderId", async (req, res) => {
       {
         status: "OUT_FOR_DELIVERY",
         deliveryPartnerId: driverPhone
+        driverPhone: driverPhone
       },
       { new: true }
     );

@@ -91,6 +91,11 @@ const orderSchema = new mongoose.Schema(
       index: true
     },
 
+    driverPhone: {
+      type: String,
+      default: ""
+    },
+
     /* =========================
        RAZORPAY INFO
     ========================== */
