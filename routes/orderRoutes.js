@@ -136,10 +136,11 @@ await User.findByIdAndUpdate(userId, {
       deliveryFee,
       tip,
       totalAmount,
-      location,
+      location: typeof location === "object"
+        ? `${location.lat},${location.lng}`
+        : location,
+
       mapLink: mapLink || "",
-      lat: req.body.lat,   
-      lng: req.body.lng,
       restaurantId: restaurantId,
       razorpayOrderId: razorpayOrder.id,
       status: "PENDING",
