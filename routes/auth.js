@@ -32,33 +32,6 @@ router.post("/phone-login", async (req, res) => {
       return res.status(400).json({ success: false });
     }
 
-// 🔥 TEST LOGIN FOR RAZORPAY
-if (idToken === "test-token-razorpay") {
-  const phoneNumber = "+919999999999";
-
-  let user = await User.findOne({ phone: phoneNumber });
-
-  if (!user) {
-    user = await User.create({
-      phone: phoneNumber,
-      name: "",
-      address: ""
-    });
-  }
-
-  const token = jwt.sign(
-    {
-      id: user._id,
-      phone: user.phone,
-      role: "customer"
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "90d" }
-  );
-
-  return res.json({ success: true, token });
-}
-
     const decoded = await admin.auth().verifyIdToken(idToken);
     const phoneNumber = decoded.phone_number;
 
