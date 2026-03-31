@@ -33,7 +33,11 @@ const restaurantSchema = new mongoose.Schema(
       default: ""
     },
 
-    // ADD THESE TWO
+    openDays: {
+      type: String,
+      default: ""
+    },
+
     lat: {
       type: Number,
       default: null
