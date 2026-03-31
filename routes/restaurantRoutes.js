@@ -12,7 +12,7 @@ Returns list of all restaurants (for customers)
 router.get("/", async (req, res) => {
   try {
     const restaurants = await Restaurant.find().select(
-      "_id name address openTime closeTime openDays"
+      "_id name address openTime closeTime openDays lat lng"
     );
 
     res.json({
@@ -135,11 +135,28 @@ router.post("/login", auth, async (req, res) => {
 
 router.put("/update", async (req, res) => {
   try {
-    const { restaurantId, name, address, openTime, closeTime, openDays } = req.body;
+    const {
+      restaurantId,
+      name,
+      address,
+      openTime,
+      closeTime,
+      openDays,
+      lat,
+      lng
+    } = req.body;
 
     const updated = await Restaurant.findByIdAndUpdate(
       restaurantId,
-      { name, address, openTime, closeTime, openDays },
+      {
+        name,
+        address,
+        openTime,
+        closeTime,
+        openDays,
+        lat,
+        lng
+      },
       { new: true }
     );
 
