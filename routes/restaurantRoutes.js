@@ -141,7 +141,7 @@ router.put("/update", async (req, res) => {
 
     const updated = await Restaurant.findByIdAndUpdate(
       restaurantId,
-      { name, address, openTime, closeTime, openDays },
+      { name, address, openTime, closeTime, openDays,  lat, lng },
       { new: true }
     );
 
