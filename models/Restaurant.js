@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 
 const restaurantSchema = new mongoose.Schema(
   {
-    name: {            // restaurant name
+    name: {            
       type: String,
       default: "",
     },
 
-    ownerName: {       // 🔥 NEW FIELD
+    ownerName: {       
       type: String,
       default: "",
     },
@@ -31,6 +31,17 @@ const restaurantSchema = new mongoose.Schema(
     closeTime: {
       type: String,
       default: ""
+    },
+
+    // ✅ ADD THESE TWO LINES
+    lat: {
+      type: Number,
+      default: null,
+    },
+
+    lng: {
+      type: Number,
+      default: null,
     },
 
     razorpayAccountId: {
