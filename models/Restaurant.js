@@ -33,17 +33,6 @@ const restaurantSchema = new mongoose.Schema(
       default: ""
     },
 
-    // ✅ ADD THESE TWO LINES
-    lat: {
-      type: Number,
-      default: null,
-    },
-
-    lng: {
-      type: Number,
-      default: null,
-    },
-
     razorpayAccountId: {
       type: String,
       default: "",

@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require("express"); 
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 
@@ -12,7 +12,7 @@ Returns list of all restaurants (for customers)
 router.get("/", async (req, res) => {
   try {
     const restaurants = await Restaurant.find().select(
-      "_id name address openTime closeTime openDays lat lng"
+      "_id name address openTime closeTime openDays"
     );
 
     res.json({
@@ -35,7 +35,7 @@ Creates a new restaurant for logged-in Firebase user
 router.post("/signup", auth, async (req, res) => {
   try {
     const ownerUserId = req.user.id;
-    const { name, phone, address, openTime, closeTime, openDays, lat, lng  } = req.body;
+    const { name, phone, address, openTime, closeTime, openDays } = req.body;
 
     if (!name || !phone || !address) {
       return res.status(400).json({
@@ -59,8 +59,6 @@ router.post("/signup", auth, async (req, res) => {
       openTime,
       closeTime,
       openDays,
-      lat,
-      lng,
       ownerUserId,
     });
 
@@ -137,11 +135,11 @@ router.post("/login", auth, async (req, res) => {
 
 router.put("/update", async (req, res) => {
   try {
-    const { restaurantId, name, address, openTime, closeTime, openDays, lat, lng } = req.body;
+    const { restaurantId, name, address, openTime, closeTime, openDays } = req.body;
 
     const updated = await Restaurant.findByIdAndUpdate(
       restaurantId,
-      { name, address, openTime, closeTime, openDays,  lat, lng },
+      { name, address, openTime, closeTime, openDays },
       { new: true }
     );
 
