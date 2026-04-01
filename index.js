@@ -30,15 +30,7 @@ app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 5001;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 /* =======================
@@ -275,21 +267,34 @@ const cloudinary = require("./config/cloudinary");
 
 app.post("/upload-landmark", upload.single("image"), async (req, res) => {
   try {
+    // ✅ DEBUG (STEP 4)
+    console.log("📸 Upload request received");
+    console.log("File:", req.file);
+    console.log("Phone:", req.body.phone);
+
     let { phone } = req.body;
 
     if (!phone) {
       return res.status(400).json({ success: false });
     }
 
-    // ✅ normalize phone
-    phone = phone.replace(/\s/g, "");
-    if (!phone.startsWith("+91")) {
-      phone = "+91" + phone;
-    }
+    // ✅ FIXED PHONE (STEP 3)
+    phone = phone.replace(/\D/g, "");
+    phone = "+91" + phone.slice(-10);
 
     // ✅ upload to cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "landmarks"
+    const streamifier = require("streamifier");
+
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "landmarks" },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+
+      streamifier.createReadStream(req.file.buffer).pipe(stream);
     });
 
     const imageUrl = result.secure_url;
