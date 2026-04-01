@@ -17,8 +17,8 @@ const UserSchema = new mongoose.Schema(
     },
     landmarkImages: {
       type: [String],
-      default: []
-    }
+      default: [],
+    },
     isVerified: {
       type: Boolean,
       default: false,
