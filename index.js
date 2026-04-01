@@ -276,14 +276,14 @@ app.post("/upload-landmark", upload.single("image"), async (req, res) => {
     const { phone } = req.body;
 
     if (!phone) {
-      return res.status(400).json({ success: false, message: "Phone required" });
+      return res.status(400).json({ success: false });
     }
 
     const imageUrl = "/uploads/" + req.file.filename;
 
-    const user = require("./models/user");
+    const User = require("./models/user");
 
-    await user.updateOne(
+    await User.updateOne(
       { phone },
       { $push: { landmarkImages: imageUrl } },
       { upsert: true }
@@ -300,12 +300,12 @@ app.post("/upload-landmark", upload.single("image"), async (req, res) => {
 // Get images
 app.get("/user-images/:phone", async (req, res) => {
   try {
-    const user = require("./models/user");
+    const User = require("./models/user");
 
-    const user = await user.findOne({ phone: req.params.phone });
+    const foundUser = await User.findOne({ phone: req.params.phone });
 
     res.json({
-      images: user?.landmarkImages || []
+      images: foundUser?.landmarkImages || []
     });
 
   } catch (err) {
