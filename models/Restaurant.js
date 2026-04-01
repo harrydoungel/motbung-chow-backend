@@ -1,21 +1,72 @@
 const mongoose = require("mongoose");
 
-const restaurantSchema = new mongoose.Schema(
+const orderSchema = new mongoose.Schema(
   {
-    name: {            
+    customerName: {
       type: String,
-      default: "",
+      required: true,
+      default: "Customer",
     },
 
-    ownerName: {       
+    user: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    // This will store Razorpay Order ID
+    orderId: {
+      type: String,
+      required: true,
+      index: true
+    },
+
+    /* =========================
+       PAYMENT BREAKDOWN
+    ========================== */
+
+    itemsTotal: {
+      type: Number,
+      required: true,
+    },
+
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+
+    tip: {
+      type: Number,
+      default: 0,
+    },
+
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+
+    /* =========================
+       DELIVERY INFO
+    ========================== */
+
+    location: {
+      type: String,
+      required: true,
+    },
+
+    mapLink: {
       type: String,
       default: "",
     },
 
     phone: {
       type: String,
-      required: true,
-      unique: true,
+      default: "",
     },
 
     address: {
@@ -23,42 +74,88 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    openTime: {
+    notes: {
       type: String,
       default: ""
     },
 
-    closeTime: {
+    /* =========================
+       RELATIONS
+    ========================== */
+
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+      required: true,
+      index: true,
+    },
+
+    deliveryPartnerId: {
+      type: String,
+      default: null,
+      index: true
+    },
+
+    driverPhone: {
       type: String,
       default: ""
     },
 
-    openDays: {
+    /* =========================
+       RAZORPAY INFO
+    ========================== */
+
+    razorpayOrderId: {
       type: String,
-      default: ""
+      required: true,
     },
 
-    lat: {
-      type: Number,
-      default: null
-    },
-
-    lng: {
-      type: Number,
-      default: null
-    },
-
-    razorpayAccountId: {
+    razorpayPaymentId: {
       type: String,
       default: "",
     },
 
-    isKycCompleted: {
+    splitTransferred: {
       type: Boolean,
       default: false,
     },
+
+    /* =========================
+       ORDER STATUS
+    ========================== */
+
+    status: {
+      type: String,
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+        "FAILED",
+        "CANCELLED"
+      ],
+      default: "PENDING",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending","paid"],
+      default: "pending"
+    },
+    /* =========================
+       ITEMS
+    ========================== */
+
+    items: [
+      {
+        name: { type: String, required: true },
+        qty: { type: Number, required: true },
+        price: { type: Number, required: true },
+        restaurantCode: String,
+      },
+    ],
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Restaurant", restaurantSchema);
+module.exports = mongoose.model("Order", orderSchema);

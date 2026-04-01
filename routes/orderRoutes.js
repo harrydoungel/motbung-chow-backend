@@ -67,6 +67,7 @@ router.post("/create-order", auth, async (req, res) => {
       deliveryFee = 0,
       tip = 0,
       platformFee = 0,
+      notes = "",
     } = req.body;
 
 // Save latest user info to profile
@@ -130,6 +131,7 @@ await User.findByIdAndUpdate(userId, {
       customerName,
       phone,
       address,
+      notes: notes,
       items,
       itemsTotal,
       platformFee,
