@@ -6,7 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
-
+const multer = require("multer");
 const Order = require("./models/Order"); // ✅ ADDED THIS LINE
 const orderRoutes = require("./routes/orderRoutes");
 
@@ -29,6 +29,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 5001;
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
 
 /* =======================
    REQUIRED ENV VARS
@@ -253,6 +264,54 @@ app.get("/api/debug/auth-test", (req, res) => {
     message: "Auth test endpoint",
     authHeader: req.headers.authorization || "None"
   });
+});
+
+/* =======================
+   LANDMARK IMAGE UPLOAD
+======================= */
+
+// Upload image
+app.post("/upload-landmark", upload.single("image"), async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ success: false, message: "Phone required" });
+    }
+
+    const imageUrl = "/uploads/" + req.file.filename;
+
+    const user = require("./models/user");
+
+    await user.updateOne(
+      { phone },
+      { $push: { landmarkImages: imageUrl } },
+      { upsert: true }
+    );
+
+    res.json({ success: true, imageUrl });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Get images
+app.get("/user-images/:phone", async (req, res) => {
+  try {
+    const user = require("./models/user");
+
+    const user = await user.findOne({ phone: req.params.phone });
+
+    res.json({
+      images: user?.landmarkImages || []
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ images: [] });
+  }
 });
 
 /* =======================
