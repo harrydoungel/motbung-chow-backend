@@ -74,11 +74,6 @@ const orderSchema = new mongoose.Schema(
       default: "",
     },
 
-    notes: {
-      type: String,
-      default: ""
-    },
-
     /* =========================
        RELATIONS
     ========================== */
