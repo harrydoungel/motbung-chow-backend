@@ -339,6 +339,50 @@ const foundUser = await User.findOne({ phone });
   }
 });
 
+// DELETE landmark image
+app.delete("/delete-image", async (req, res) => {
+  try {
+    const { phone, imageUrl } = req.body;
+
+    if (!phone || !imageUrl) {
+      return res.status(400).json({ success: false });
+    }
+
+    const User = require("./models/User");
+
+    // ✅ FIX PHONE FORMAT
+    let formattedPhone = phone.replace(/\D/g, "");
+    formattedPhone = "+91" + formattedPhone.slice(-10);
+
+    // ✅ EXTRACT PUBLIC ID FROM CLOUDINARY URL
+    // example:
+    // https://res.cloudinary.com/.../landmarks/abc123.jpg
+    const parts = imageUrl.split("/");
+    const fileName = parts[parts.length - 1];
+    const publicId = "landmarks/" + fileName.split(".")[0];
+
+    // ✅ DELETE FROM CLOUDINARY
+    const cloudResult = await cloudinary.uploader.destroy(publicId);
+
+    if (cloudResult.result !== "ok") {
+      console.log("Cloudinary delete failed:", cloudResult);
+      return res.status(500).json({ success: false });
+    }
+
+    // ✅ REMOVE FROM DATABASE
+    await User.updateOne(
+      { phone: formattedPhone },
+      { $pull: { landmarkImages: imageUrl } }
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 /* =======================
    HEALTH
 ======================= */
