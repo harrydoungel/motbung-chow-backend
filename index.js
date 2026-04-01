@@ -271,17 +271,30 @@ app.get("/api/debug/auth-test", (req, res) => {
 ======================= */
 
 // Upload image
+const cloudinary = require("./config/cloudinary");
+
 app.post("/upload-landmark", upload.single("image"), async (req, res) => {
   try {
-    const { phone } = req.body;
+    let { phone } = req.body;
 
     if (!phone) {
       return res.status(400).json({ success: false });
     }
 
-    const imageUrl = "/uploads/" + req.file.filename;
+    // ✅ normalize phone
+    phone = phone.replace(/\s/g, "");
+    if (!phone.startsWith("+91")) {
+      phone = "+91" + phone;
+    }
 
-    const User = require("./models/user");
+    // ✅ upload to cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "landmarks"
+    });
+
+    const imageUrl = result.secure_url;
+
+    const User = require("./models/User");
 
     await User.updateOne(
       { phone },
@@ -300,9 +313,16 @@ app.post("/upload-landmark", upload.single("image"), async (req, res) => {
 // Get images
 app.get("/user-images/:phone", async (req, res) => {
   try {
-    const User = require("./models/user");
+    const User = require("./models/User");
 
-    const foundUser = await User.findOne({ phone: req.params.phone });
+    let phone = req.params.phone;
+
+    phone = phone.replace(/\s/g, "");
+    if (!phone.startsWith("+91")) {
+      phone = "+91" + phone;
+    }
+
+const foundUser = await User.findOne({ phone });
 
     res.json({
       images: foundUser?.landmarkImages || []
