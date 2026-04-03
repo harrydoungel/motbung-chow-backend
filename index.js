@@ -473,6 +473,21 @@ app.use((err, req, res, next) => {
   });
 });
 
+const printOrder = require('./printer'); // make sure printer.js is in same folder
+
+app.post('/print', (req, res) => {
+  try {
+    const order = req.body;
+
+    printOrder(order);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Print error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`🔐 JWT Secret configured: ${!!process.env.JWT_SECRET}`);
