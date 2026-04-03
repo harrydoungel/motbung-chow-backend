@@ -124,6 +124,15 @@ await User.findByIdAndUpdate(userId, {
       receipt: "rcpt_" + Date.now(),
     });
 
+    const restaurant = await Restaurant.findById(restaurantId);
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found"
+      });
+    }
+
     // 🔥 Save as PENDING
     const order = new Order({
       user: userId,
@@ -144,6 +153,7 @@ await User.findByIdAndUpdate(userId, {
 
       mapLink: mapLink || "",
       restaurantId: restaurantId,
+      restaurantName: restaurant.name,
       razorpayOrderId: razorpayOrder.id,
       status: "PENDING",
     });

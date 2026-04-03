@@ -90,6 +90,11 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
 
+    restaurantName: {
+      type: String,
+      required: true
+    },
+
     deliveryPartnerId: {
       type: String,
       default: null,
