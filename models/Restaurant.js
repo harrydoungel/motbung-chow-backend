@@ -23,12 +23,7 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    openTime: {
-      type: String,
-      default: ""
-    },
-
-    closeTime: {
+    timeRange: {
       type: String,
       default: ""
     },

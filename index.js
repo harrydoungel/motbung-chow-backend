@@ -488,6 +488,28 @@ app.post('/print', (req, res) => {
   }
 });
 
+// =======================
+// AUTO PRINT (SOCKET CLIENT)
+// =======================
+const ioClient = require("socket.io-client");
+
+const socketClient = ioClient("https://motbung-chow-backend.onrender.com");
+
+socketClient.on("connect", () => {
+  console.log("🟢 Auto-print connected to Render");
+});
+
+// 🔥 THIS IS THE MAIN PART
+socketClient.on("newOrder", (order) => {
+  console.log("🖨 Auto printing order:", order.orderId);
+
+  try {
+    printOrder(order);
+  } catch (err) {
+    console.error("❌ Auto print error:", err);
+  }
+});
+
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`🔐 JWT Secret configured: ${!!process.env.JWT_SECRET}`);
