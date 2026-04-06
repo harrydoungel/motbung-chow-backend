@@ -136,8 +136,8 @@ router.put("/update", async (req, res) => {
   try {
     const {
       restaurantId,
+      name,
       restaurant,
-      ownerName,
       address,
       timeRange,
       openDays,
@@ -148,8 +148,8 @@ router.put("/update", async (req, res) => {
     const updated = await Restaurant.findByIdAndUpdate(
       restaurantId,
       {
+        name,
         restaurant,
-        ownerName,
         address,
         timeRange,
         openDays,
