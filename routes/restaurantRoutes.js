@@ -12,7 +12,7 @@ Returns list of all restaurants (for customers)
 router.get("/", async (req, res) => {
   try {
     const restaurants = await Restaurant.find().select(
-      "_id name address timeRange openDays lat lng"
+      "_id restaurant address timeRange openDays lat lng"
     );
 
     res.json({
@@ -35,9 +35,9 @@ Creates a new restaurant for logged-in Firebase user
 router.post("/signup", auth, async (req, res) => {
   try {
     const ownerUserId = req.user.id;
-    const { name, phone, address, timeRange, openDays } = req.body;
+    const { restaurant, phone, address, timeRange, openDays } = req.body;
 
-    if (!name || !phone || !address) {
+    if (!restaurant || !phone || !address) {
       return res.status(400).json({
         success: false,
         message: "Name, phone, and address are required",
@@ -52,8 +52,8 @@ router.post("/signup", auth, async (req, res) => {
       });
     }
 
-    const restaurant = new Restaurant({
-      name,
+    const restaurants = new Restaurant({
+      restaurant,
       phone,
       address,
       timeRange,
@@ -61,13 +61,13 @@ router.post("/signup", auth, async (req, res) => {
       ownerUserId,
     });
 
-    await restaurant.save();
+    await restaurants.save();
 
     const token = jwt.sign(
       {
         id: ownerUserId,
         role: "restaurant",
-        restaurantId: restaurant._id,
+        restaurantId: restaurants._id,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -77,7 +77,7 @@ router.post("/signup", auth, async (req, res) => {
       success: true,
       message: "Restaurant created successfully",
       token,
-      restaurantId: restaurant._id,
+      restaurantId: restaurants._id,
       restaurant,
     });
   } catch (err) {
@@ -136,7 +136,7 @@ router.put("/update", async (req, res) => {
   try {
     const {
       restaurantId,
-      name,
+      restaurant,
       ownerName,
       address,
       timeRange,
@@ -148,7 +148,7 @@ router.put("/update", async (req, res) => {
     const updated = await Restaurant.findByIdAndUpdate(
       restaurantId,
       {
-        name,
+        restaurant,
         ownerName,
         address,
         timeRange,
