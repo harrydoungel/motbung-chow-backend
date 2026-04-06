@@ -280,7 +280,7 @@ router.get("/restaurant/profile", auth, async (req, res) => {
       name: restaurant.name || "",
       restaurant: restaurant.restaurant || "",
       phone: restaurant.phone || "",
-      address: restaurant.address || "",
+      location: restaurant.address || "",
       timeRange: restaurant.timeRange || "",
       openDays: restaurant.openDays || ""
     });
