@@ -137,6 +137,7 @@ router.put("/update", async (req, res) => {
     const {
       restaurantId,
       name,
+      ownerName,
       address,
       timeRange,
       openDays,
@@ -148,6 +149,7 @@ router.put("/update", async (req, res) => {
       restaurantId,
       {
         name,
+        ownerName,
         address,
         timeRange,
         openDays,
