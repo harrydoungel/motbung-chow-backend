@@ -7,7 +7,7 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    ownerName: {       
+    restaurant: {       
       type: String,
       default: "",
     },
