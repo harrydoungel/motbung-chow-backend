@@ -5,7 +5,6 @@ async function sendNotification(token, title, body, url) {
   const message = {
     token: token,
 
-    // ✅ DATA ONLY (IMPORTANT)
     data: {
       title: title,
       body: body,
@@ -16,19 +15,21 @@ async function sendNotification(token, title, body, url) {
       priority: "high"
     },
 
+    apns: {
+      headers: {
+        "apns-priority": "10"
+      }
+    },
+
     webpush: {
       headers: {
-        Urgency: "high"
+        Urgency: "high",
+        TTL: "0"
       }
     }
   };
 
-  try {
-    await admin.messaging().send(message);
-    console.log("🔔 Notification sent (data push)");
-  } catch (error) {
-    console.error("Notification error:", error);
-  }
+  await admin.messaging().send(message);
 }
 
 module.exports = sendNotification;
