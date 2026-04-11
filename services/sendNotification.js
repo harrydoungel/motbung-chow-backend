@@ -5,40 +5,27 @@ async function sendNotification(token, title, body, url) {
   const message = {
     token: token,
 
-    notification: {
-      title: title,
-      body: body
-    },
-
+    // ✅ DATA ONLY (IMPORTANT)
     data: {
+      title: title,
+      body: body,
       url: url || "/"
     },
 
     android: {
-      priority: "high",
-      notification: {
-        sound: "default",
-        channelId: "orders",
-        priority: "max",
-        defaultVibrateTimings: true
-      }
+      priority: "high"
     },
 
     webpush: {
       headers: {
         Urgency: "high"
-      },
-      notification: {
-        requireInteraction: true,
-        vibrate: [300,100,300,100,300],
-        sound: "default"
       }
     }
   };
 
   try {
     await admin.messaging().send(message);
-    console.log("🔔 Notification sent with sound");
+    console.log("🔔 Notification sent (data push)");
   } catch (error) {
     console.error("Notification error:", error);
   }
