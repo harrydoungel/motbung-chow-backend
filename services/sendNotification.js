@@ -3,11 +3,14 @@ const admin = require("../firebaseAdmin");
 async function sendNotification(token, title, body, url) {
 
   const message = {
-    token: token,
+    token,
+
+    notification: {
+      title,
+      body
+    },
 
     data: {
-      title: title,
-      body: body,
       url: url || "/"
     },
 
@@ -23,8 +26,13 @@ async function sendNotification(token, title, body, url) {
 
     webpush: {
       headers: {
-        Urgency: "high",
-        TTL: "0"
+        Urgency: "high"
+      },
+      notification: {
+        title,
+        body,
+        icon: "/images/icon-192.png",
+        badge: "/images/icon-192.png"
       }
     }
   };

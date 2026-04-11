@@ -43,6 +43,11 @@ const restaurantSchema = new mongoose.Schema(
       default: null
     },
 
+    fcmToken: {
+      type: String,
+      default: ""
+    },
+
     razorpayAccountId: {
       type: String,
       default: "",

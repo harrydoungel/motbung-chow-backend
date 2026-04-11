@@ -214,11 +214,13 @@ router.post("/verify-payment", auth, async (req, res) => {
       io.to(order.restaurantId.toString()).emit("newOrder", order);
     }
 
-    if (order && order.fcmToken) {
+    const restaurant = await Restaurant.findById(order.restaurantId);
+
+    if (restaurant && restaurant.fcmToken) {
       sendNotification(
-        order.fcmToken,
-        "Order Confirmed",
-        "Your order has been confirmed!",
+        restaurant.fcmToken,
+        "New Order",
+        `New order from ${order.customerName}`,
         "/?tab=orders"
       );
     }
@@ -277,11 +279,13 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
         io.to(updated.restaurantId.toString()).emit("newOrder", updated);
       }
 
-      if (updated && updated.fcmToken) {
+      const restaurant = await Restaurant.findById(updated.restaurantId);
+
+      if (restaurant && restaurant.fcmToken) {
         sendNotification(
-          updated.fcmToken,
-          "Order Confirmed",
-          "Your order has been confirmed!",
+          restaurant.fcmToken,
+          "New Order",
+          `New order from ${updated.customerName}`,
           "/?tab=orders"
         );
       }
@@ -576,9 +580,11 @@ router.post("/deliver/:orderId", async (req, res) => {
       io.to(order.restaurantId.toString()).emit("orderUpdated", order);
     }
 
-    if (order.fcmToken) {
+    const restaurant = await Restaurant.findById(order.restaurantId);
+
+    if (restaurant && restaurant.fcmToken) {
       sendNotification(
-        order.fcmToken,
+        restaurant.fcmToken,
         "Order Delivered",
         "🎉 Your order has been delivered!",
         "/?tab=orders"
@@ -636,6 +642,28 @@ router.get("/restaurants", async (req,res)=>{
     res.status(500).json({success:false});
   }
 
+});
+
+router.post("/save-fcm-token", async (req, res) => {
+  try {
+    const { restaurantId, token } = req.body;
+
+    if (!restaurantId || !token) {
+      return res.status(400).json({ success: false });
+    }
+
+    await Restaurant.findByIdAndUpdate(restaurantId, {
+      fcmToken: token
+    });
+
+    console.log("✅ FCM token saved:", restaurantId);
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Save token error:", err);
+    res.status(500).json({ success: false });
+  }
 });
 
 module.exports = router;
