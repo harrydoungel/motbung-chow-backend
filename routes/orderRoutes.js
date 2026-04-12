@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
 const { restaurants } = req.query;
 
 let filter = {
-  status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY"] }
+  status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY"] },
   isPickup: false  
 };
 
