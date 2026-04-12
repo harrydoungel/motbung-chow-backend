@@ -106,6 +106,10 @@ const orderSchema = new mongoose.Schema(
       default: ""
     },
 
+    isPickup: {
+      type: Boolean,
+      default: false
+    }
     /* =========================
        RAZORPAY INFO
     ========================== */
