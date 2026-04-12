@@ -64,6 +64,7 @@ router.post("/create-order", auth, async (req, res) => {
       phone,
       address,
       restaurantId,
+      isPickup = false, 
       deliveryFee = 0,
       tip = 0,
       platformFee = 0,
@@ -155,6 +156,7 @@ await User.findByIdAndUpdate(userId, {
       restaurantId: restaurantId,
       restaurantName: restaurant.restaurant,
       razorpayOrderId: razorpayOrder.id,
+      isPickup: isPickup,
       status: "PENDING",
     });
 
@@ -210,7 +212,7 @@ router.post("/verify-payment", auth, async (req, res) => {
     );
 
     const io = req.app.get("io");
-    if (io && order?.restaurantId) {
+    if (io && order?.restaurantId && !order.isPickup) {
       io.to(order.restaurantId.toString()).emit("newOrder", order);
     }
 
@@ -275,7 +277,8 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
       );
 
       const io = req.app.get("io");
-      if (io && updated?.restaurantId && updated.status === "CONFIRMED") {
+      if (io && updated?.restaurantId && updated.status === "CONFIRMED"&&
+      !updated.isPickup) {
         io.to(updated.restaurantId.toString()).emit("newOrder", updated);
       }
 
