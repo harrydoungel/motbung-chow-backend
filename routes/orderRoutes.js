@@ -153,7 +153,7 @@ await User.findByIdAndUpdate(userId, {
 
       mapLink: mapLink || "",
       restaurantId: restaurantId,
-      restaurantName: restaurant.name,
+      restaurantName: restaurant.restaurant,
       razorpayOrderId: razorpayOrder.id,
       status: "PENDING",
     });
