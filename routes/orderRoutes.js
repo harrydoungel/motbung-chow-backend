@@ -27,6 +27,7 @@ const { restaurants } = req.query;
 
 let filter = {
   status: { $in: ["CONFIRMED", "OUT_FOR_DELIVERY"] }
+  isPickup: false  
 };
 
 if (restaurants && restaurants !== "ALL") {
