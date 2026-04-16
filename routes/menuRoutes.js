@@ -193,3 +193,47 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
+
+/* =====================================================
+   6️⃣ ADMIN: UPDATE MENU ITEM (EDIT)
+===================================================== */
+router.put("/:id", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, price } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid menu ID",
+      });
+    }
+
+    const item = await Menu.findById(id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu item not found",
+      });
+    }
+
+    // update fields
+    if (name !== undefined) item.name = name;
+    if (price !== undefined) item.price = price;
+
+    await item.save();
+
+    res.json({
+      success: true,
+      item,
+    });
+
+  } catch (err) {
+    console.error("❌ Update error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
