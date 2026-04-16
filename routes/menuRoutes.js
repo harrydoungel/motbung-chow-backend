@@ -192,8 +192,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
-
 /* =====================================================
    6️⃣ ADMIN: UPDATE MENU ITEM (EDIT)
 ===================================================== */
@@ -237,3 +235,7 @@ router.put("/:id", auth, async (req, res) => {
     });
   }
 });
+
+module.exports = router;
+
+
