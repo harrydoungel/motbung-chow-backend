@@ -228,7 +228,11 @@ router.post("/verify-payment", auth, async (req, res) => {
       );
     }
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+      orderId: order.orderId, 
+      estimatedTime: 25 
+    });
 
   } catch (err) {
     console.error("Verify payment error:", err);
